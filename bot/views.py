@@ -5,7 +5,7 @@ import telegram
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
-
+#asd
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 @csrf_exempt
