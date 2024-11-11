@@ -33,7 +33,41 @@ inline_keyboard = [
             [InlineKeyboardButton("📢 Купить рекламу", callback_data='ads')],
         ]
 inline_markup = InlineKeyboardMarkup(inline_keyboard)
+
+sell_skip = [
+    [InlineKeyboardButton("💻ПК", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("🖥️Товары для компьютера", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("🛠️Комплектующие для компьютера", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("🖧Серверное оборудование", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("🌐Сетевое оборудование", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("🖨️Офисная техника и расходники", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("📱Телефоны", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("💿Программное обеспечение", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='sell')],
+
+]
+sell_skip_markup = InlineKeyboardMarkup(sell_skip)
+sell_skip_pod = [
+    [InlineKeyboardButton("🖥️Стационарные ПК", callback_data='sell_skip')],
+    [InlineKeyboardButton("💻Ноутбуки", callback_data='sell_skip')],
+    [InlineKeyboardButton("🖨️Моноблоки", callback_data='sell_skip')],
+    [InlineKeyboardButton("📱Планшеты", callback_data='sell_skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='sell_skip')],
+]
+sell_skip_pod_markup = InlineKeyboardMarkup(sell_skip_pod)
+text_category="🔍Выберите категорию вашего товара."
+
+text_sell="📸 Пожалуйста, отправьте фото. Не более 10 штук."
+sell = [[InlineKeyboardButton("➡️Пропустить", callback_data='sell_skip')],
+        [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
+sell_markup = InlineKeyboardMarkup(sell)
+saved_photo = None
+skip_catergory=None
+skip_pod_category=None
+skip_pod_pod_category=None
+
 def process_message(json_data):
+    global saved_photo
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
     chat_username = json_data['message']['chat'].get('username', 'username')
@@ -64,6 +98,20 @@ def process_message(json_data):
         support = f"Пользователь @{chat_username} id:{chat_id} написал: {message_text}"
 
         bot.send_message(group_id, text=support)
+
+    elif user_states.get(chat_id) == "awaiting_photo":
+        if 'photo' in json_data['message']:
+            photo = json_data['message']['photo'][-1]  # Get the highest resolution
+            saved_photo = photo['file_id']
+
+            bot.send_message(
+                chat_id,
+                text=text_category,
+                reply_markup=sell_skip_markup
+            )
+
+
+
 
     else:
 
@@ -190,6 +238,50 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=continue_markup
         )
+    elif callback_data_message == 'sell':
+
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text_sell
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=sell_markup
+        )
+        user_states[chat_id] = 'awaiting_photo'
+
+    elif callback_data_message == 'sell_skip':
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text_category
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=sell_skip_markup
+        )
+    elif callback_data_message == 'sell_skip_skip':
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍Выберите подкатегорию вашего товара"
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=sell_skip_pod_markup
+        )
+
+
+
+
 
 
 
