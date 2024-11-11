@@ -35,26 +35,34 @@ inline_keyboard = [
 inline_markup = InlineKeyboardMarkup(inline_keyboard)
 
 sell_skip = [
-    [InlineKeyboardButton("💻ПК", callback_data='category#ПК')],
-    [InlineKeyboardButton("🖥️Товары для компьютера", callback_data='category#Товары_для_компьютера')],
-    [InlineKeyboardButton("🛠️Комплектующие для компьютера", callback_data='category#Комплектующие_для_компьютера')],
-    [InlineKeyboardButton("🖧Серверное оборудование", callback_data='category#Серверное_оборудование')],
-    [InlineKeyboardButton("🌐Сетевое оборудование", callback_data='category#Сетевое_оборудование')],
-    [InlineKeyboardButton("🖨️Офисная техника и расходники", callback_data='category#Офисная_техника_и_расходники')],
-    [InlineKeyboardButton("📱Телефоны", callback_data='category#Телефоны')],
-    [InlineKeyboardButton("💿Программное обеспечение", callback_data='category#Программное_обеспечение')],
+    [InlineKeyboardButton("💻ПК", callback_data='cat#ПК')],
+    [InlineKeyboardButton("🖥️Товары для компьютера", callback_data='cat#Товары_для_компьютера')],
+    [InlineKeyboardButton("🛠️Комплектующие для компьютера", callback_data='cat#Комплектующие_для_компьютера')],
+    [InlineKeyboardButton("🖧Серверное оборудование", callback_data='cat#Серверное_оборудование')],
+    [InlineKeyboardButton("🌐Сетевое оборудование", callback_data='cat#Сетевое_оборудование')],
+    [InlineKeyboardButton("🖨️Офисная техника и расходники", callback_data='cat#Офисная_техника_и_расходники')],
+    [InlineKeyboardButton("📱Телефоны", callback_data='cat#Телефоны')],
+    [InlineKeyboardButton("💿Программное обеспечение", callback_data='cat#Программное_обеспечение')],
     [InlineKeyboardButton("🔙Назад", callback_data='sell')],
 
 ]
 sell_skip_markup = InlineKeyboardMarkup(sell_skip)
 sell_skip_pod = [
-    [InlineKeyboardButton("🖥️Стационарные ПК", callback_data='sell_skip')],
-    [InlineKeyboardButton("💻Ноутбуки", callback_data='sell_skip')],
-    [InlineKeyboardButton("🖨️Моноблоки", callback_data='sell_skip')],
-    [InlineKeyboardButton("📱Планшеты", callback_data='sell_skip')],
+    [InlineKeyboardButton("🖥️Стационарные ПК", callback_data='pod#Стационарные_ПК')],
+    [InlineKeyboardButton("💻Ноутбуки", callback_data='pod#Ноутбуки')],
+    [InlineKeyboardButton("🖨️Моноблоки", callback_data='pod#Моноблоки')],
+    [InlineKeyboardButton("📱Планшеты", callback_data='pod#Планшеты')],
     [InlineKeyboardButton("🔙Назад", callback_data='sell_skip')],
 ]
 sell_skip_pod_markup = InlineKeyboardMarkup(sell_skip_pod)
+
+sell_skip_pod_category = [
+    [InlineKeyboardButton("🤖Android", callback_data='skip#android')],
+    [InlineKeyboardButton("🍎Apple", callback_data='skip#apple')],
+    [InlineKeyboardButton("➡️Пропустить", callback_data='skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='cat')],
+]
+sell_skip_pod_category_markup = InlineKeyboardMarkup(sell_skip_pod_category)
 text_category="🔍Выберите категорию вашего товара."
 
 text_sell="📸 Пожалуйста, отправьте фото. Не более 10 штук."
@@ -64,10 +72,15 @@ sell_markup = InlineKeyboardMarkup(sell)
 saved_photo = None
 skip_catergory=None
 skip_pod_category=None
-skip_pod_pod_category=None
-
+skip_pod_pod_category=""
+price=None
+phone=None
+description=None
+city=None
+nazad_key = [[InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
+nazad_markup = InlineKeyboardMarkup(nazad_key)
 def process_message(json_data):
-    global saved_photo
+    global saved_photo,price,description,city,phone
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
     chat_username = json_data['message']['chat'].get('username', 'username')
@@ -100,6 +113,7 @@ def process_message(json_data):
         bot.send_message(group_id, text=support)
 
     elif user_states.get(chat_id) == "awaiting_photo":
+        user_states.pop(chat_id)
         if 'photo' in json_data['message']:
             photo = json_data['message']['photo'][-1]  # Get the highest resolution
             saved_photo = photo['file_id']
@@ -109,6 +123,44 @@ def process_message(json_data):
                 text=text_category,
                 reply_markup=sell_skip_markup
             )
+    elif user_states.get(chat_id) == 'awaiting_description':
+        description=message_text
+        bot.send_message(chat_id,text='📞 Отправьте свои контактные данные.', reply_markup=nazad_markup)
+        user_states[chat_id] = 'awaiting_price'
+    elif user_states.get(chat_id) == 'awaiting_price':
+        phone=message_text
+
+        bot.send_message(chat_id,text='💰 Укажите стоимость товара', reply_markup=nazad_markup)
+        user_states[chat_id] = 'awaiting_city'
+    elif user_states.get(chat_id) == 'awaiting_city':
+        price=message_text
+        bot.send_message(chat_id,text='🏙️ Укажите город одним словом или с нижним подчёркиванием.  Например: Санкт_Петербург. (Это нужно для формирования хэштега города, чтобы облегчить поиск).', reply_markup=nazad_markup)
+        user_states[chat_id] = 'awaiting_complete'
+    elif user_states.get(chat_id) == 'awaiting_complete':
+        approve = [[InlineKeyboardButton("✅Опубликовать", callback_data='approve')],
+                [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
+        approve_markup = InlineKeyboardMarkup(approve)
+        city=message_text
+        text = (
+            f"Тип: #Продажа\n"
+            f"Категория: #{skip_catergory}\n"
+            f"Подкатегория: #{skip_pod_category}\n"
+            f"Под: #{skip_pod_pod_category}\n"
+            f"Пользователь: #{chat_id}\n"
+            f"Описание: {description}\n"
+            f"Контакты: {phone}\n"
+            f"Цена: {price}\n"
+            f"Город: #{city}\n"
+            f"Автор: @{chat_username}\n"
+            f"Отправлено через: @ITbarakholka_bot"
+        )
+        if saved_photo:
+            bot.send_photo(chat_id,caption=text,photo=saved_photo,reply_markup=approve_markup)
+        else:
+            bot.send_message(chat_id,text=text,reply_markup=approve_markup)
+
+        user_states.pop(chat_id)
+
 
 
 
@@ -155,13 +207,13 @@ def generate_category_keyboard(chat_id):
 
 
 def process_callback_query(json_data):
+    global skip_catergory,skip_pod_category,skip_pod_pod_category
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
     message_id=query['message']['message_id']
 
     callback_data_message = query['data']
-    nazad_key = [[InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
-    nazad_markup = InlineKeyboardMarkup(nazad_key)
+
 
 
     if callback_data_message == "ads":
@@ -266,9 +318,12 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=sell_skip_markup
         )
-    elif callback_data_message.startswith("category"):
-        skip_catergory=callback_data_message.split('#')[1]
-        print(skip_catergory)
+    elif callback_data_message.startswith("cat"):
+        try:
+            skip_catergory = callback_data_message.split('#')[1]
+        except:
+            pass
+
 
 
         bot.edit_message_text(
@@ -282,6 +337,70 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=sell_skip_pod_markup
         )
+    elif callback_data_message.startswith("pod"):
+        try:
+            skip_pod_category = callback_data_message.split('#')[1]
+
+        except:
+            pass
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍Выберите подподкатегорию вашего товара."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=sell_skip_pod_category_markup
+        )
+    elif callback_data_message.startswith('skip'):
+        try:
+            skip_pod_pod_category = callback_data_message.split('#')[1]
+
+        except:
+            pass
+
+
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="📝 Пожалуйста, пришлите описание."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=nazad_markup
+        )
+        user_states[chat_id] = 'awaiting_description'
+
+
+    elif callback_data_message == 'approve':
+        approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data='approve')],
+                   [InlineKeyboardButton("❌Отклонить", callback_data='nazad')]]
+        approve_admin_markup = InlineKeyboardMarkup(approve_admin)
+        if 'photo' in query['message']:
+            bot.send_photo(group_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''),reply_markup=approve_admin_markup)
+        else:
+            bot.send_message(group_id,text=query['message']['text'],reply_markup=approve_admin_markup)
+
+
+
+        approve = [[InlineKeyboardButton("✅ Объявление отправлено на модерацию.", callback_data='approve')],
+                   [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
+        approve_markup = InlineKeyboardMarkup(approve)
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=approve_markup
+        )
+
+
+
+
 
 
 
