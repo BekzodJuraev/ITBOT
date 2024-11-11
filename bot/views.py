@@ -41,7 +41,7 @@ def process_message(json_data):
     if 'reply_to_message' in json_data['message']:
         reply_chat_id = json_data['message']['reply_to_message']['chat'].get('id', None)
         reply_message=json_data['message']['reply_to_message']['text']
-        #from_chat=json_data['message']['from']['id']
+
         if reply_chat_id == group_id:
 
             user_id = re.search(r'id:(\d+)', reply_message).group(1)
@@ -62,8 +62,6 @@ def process_message(json_data):
 
         user_states.pop(chat_id)
         support = f"Пользователь @{chat_username} id:{chat_id} написал: {message_text}"
-        #support = f"Пользователь @{chat_username} id:{chat_id}  написал: {message_text}"
-
 
         bot.send_message(group_id, text=support)
 
@@ -74,12 +72,49 @@ def process_message(json_data):
                     f"объявлений на канале @ITbarakholka. 🚀 Рад приветствовать тебя, @{chat_username}!")
             bot.send_message(chat_id, text, reply_markup=inline_markup)
 
+user_selected_category = {}
+def generate_category_keyboard(chat_id):
+    categories = [
+        ("ПК", 'pc'),
+        ("Товары для компьютера", 'pc_comp'),
+        ("Комплектующие для компьютера", 'pc_comp1'),
+        ("Сетевое оборудование", 'pc_network'),
+        ("Офисная техника и расходники", 'pc_office'),
+        ("Телефоны", 'pc_phone'),
+        ("Программное обеспечение", 'pf_software'),
+    ]
+
+    continue_key = []
+
+    # Loop through all categories and mark the selected category with ✅
+    for category_name, callback_value in categories:
+        # If the category is selected, add a ✅ next to it
+        if user_selected_category.get(chat_id) == callback_value:
+            category_button = InlineKeyboardButton(f"✅ {category_name}", callback_data=callback_value)
+        else:
+            category_button = InlineKeyboardButton(category_name, callback_data=callback_value)
+
+        continue_key.append([category_button])
+
+    # Add buttons for "Продолжить", "Искать", and "Назад"
+    continue_key.extend([
+        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_continue')],
+        [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+        [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
+    ])
+
+    return InlineKeyboardMarkup(continue_key)
+
+
 def process_callback_query(json_data):
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
+    message_id=query['message']['message_id']
+
     callback_data_message = query['data']
     nazad_key = [[InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
     nazad_markup = InlineKeyboardMarkup(nazad_key)
+
 
     if callback_data_message == "ads":
         bot.send_message(
@@ -88,7 +123,7 @@ def process_callback_query(json_data):
                  "Пожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!",
             reply_markup=nazad_markup
         )
-        # Set user state to "awaiting_ad_text"
+
         user_states[chat_id] = 'awaiting_ad_text'
 
 
@@ -97,8 +132,69 @@ def process_callback_query(json_data):
         user_states[chat_id] = 'awaiting_support_text'
 
     elif callback_data_message == "nazad":
-        # Return to the main menu
-        bot.send_message(chat_id, text="Меню:", reply_markup=inline_markup)
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="Меню:"  # Update the message text
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=query['message']['message_id'],
+            reply_markup=inline_markup
+        )
+
+    elif callback_data_message == "pc_continue":
+
+        pc_continue = [
+            [InlineKeyboardButton("Стационарные ПК", callback_data='pc_desktop')],
+            [InlineKeyboardButton("Ноутбуки", callback_data='pc_laptop')],
+            [InlineKeyboardButton("Моноблоки", callback_data='pc_desktop')],
+            [InlineKeyboardButton("Планшеты", callback_data='pc_monoblock')],
+            [InlineKeyboardButton("➡️Продолжить", callback_data='pc_post')],
+            [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+            [InlineKeyboardButton("🔙Назад", callback_data='category')],
+
+        ]
+        pc_continue_markup = InlineKeyboardMarkup(pc_continue)
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔽 Выберите подкатегорию, отмечая её галочкой ✅. Или же, можете пропустить этот шаг и просто нажать «➡️Продолжить» ."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=query['message']['message_id'],
+            reply_markup=pc_continue_markup
+        )
+
+
+
+
+    elif callback_data_message == "category":
+        text="🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
+        continue_markup = generate_category_keyboard(chat_id)
+
+        # Edit the message with updated text and keyboard
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=continue_markup
+        )
+
+
+
+
+
 
 def index(request):
     return HttpResponse("Hello, World!")
