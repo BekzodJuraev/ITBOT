@@ -35,14 +35,14 @@ inline_keyboard = [
 inline_markup = InlineKeyboardMarkup(inline_keyboard)
 
 sell_skip = [
-    [InlineKeyboardButton("💻ПК", callback_data='sell_skip_skip')],
-    [InlineKeyboardButton("🖥️Товары для компьютера", callback_data='sell_skip_skip')],
-    [InlineKeyboardButton("🛠️Комплектующие для компьютера", callback_data='sell_skip_skip')],
-    [InlineKeyboardButton("🖧Серверное оборудование", callback_data='sell_skip_skip')],
-    [InlineKeyboardButton("🌐Сетевое оборудование", callback_data='sell_skip_skip')],
-    [InlineKeyboardButton("🖨️Офисная техника и расходники", callback_data='sell_skip_skip')],
-    [InlineKeyboardButton("📱Телефоны", callback_data='sell_skip_skip')],
-    [InlineKeyboardButton("💿Программное обеспечение", callback_data='sell_skip_skip')],
+    [InlineKeyboardButton("💻ПК", callback_data='category#ПК')],
+    [InlineKeyboardButton("🖥️Товары для компьютера", callback_data='category#Товары_для_компьютера')],
+    [InlineKeyboardButton("🛠️Комплектующие для компьютера", callback_data='category#Комплектующие_для_компьютера')],
+    [InlineKeyboardButton("🖧Серверное оборудование", callback_data='category#Серверное_оборудование')],
+    [InlineKeyboardButton("🌐Сетевое оборудование", callback_data='category#Сетевое_оборудование')],
+    [InlineKeyboardButton("🖨️Офисная техника и расходники", callback_data='category#Офисная_техника_и_расходники')],
+    [InlineKeyboardButton("📱Телефоны", callback_data='category#Телефоны')],
+    [InlineKeyboardButton("💿Программное обеспечение", callback_data='category#Программное_обеспечение')],
     [InlineKeyboardButton("🔙Назад", callback_data='sell')],
 
 ]
@@ -266,7 +266,11 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=sell_skip_markup
         )
-    elif callback_data_message == 'sell_skip_skip':
+    elif callback_data_message.startswith("category"):
+        skip_catergory=callback_data_message.split('#')[1]
+        print(skip_catergory)
+
+
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
