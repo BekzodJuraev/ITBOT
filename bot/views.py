@@ -8,6 +8,7 @@ import re
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-4587708639
+main_id=-4563354620
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 @csrf_exempt
@@ -84,6 +85,7 @@ def process_message(json_data):
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
     chat_username = json_data['message']['chat'].get('username', 'username')
+    chat_name = json_data['message']['chat'].get('first_name', 'first_name')
 
     if 'reply_to_message' in json_data['message']:
         reply_chat_id = json_data['message']['reply_to_message']['chat'].get('id', None)
@@ -137,7 +139,7 @@ def process_message(json_data):
         bot.send_message(chat_id,text='🏙️ Укажите город одним словом или с нижним подчёркиванием.  Например: Санкт_Петербург. (Это нужно для формирования хэштега города, чтобы облегчить поиск).', reply_markup=nazad_markup)
         user_states[chat_id] = 'awaiting_complete'
     elif user_states.get(chat_id) == 'awaiting_complete':
-        approve = [[InlineKeyboardButton("✅Опубликовать", callback_data='approve')],
+        approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}')],
                 [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
         approve_markup = InlineKeyboardMarkup(approve)
         city=message_text
@@ -146,7 +148,7 @@ def process_message(json_data):
             f"Категория: #{skip_catergory}\n"
             f"Подкатегория: #{skip_pod_category}\n"
             f"Под: #{skip_pod_pod_category}\n"
-            f"Пользователь: #{chat_id}\n"
+            f"Пользователь: #{chat_name}\n"
             f"Описание: {description}\n"
             f"Контакты: {phone}\n"
             f"Цена: {price}\n"
@@ -378,9 +380,10 @@ def process_callback_query(json_data):
         user_states[chat_id] = 'awaiting_description'
 
 
-    elif callback_data_message == 'approve':
-        approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data='approve')],
-                   [InlineKeyboardButton("❌Отклонить", callback_data='nazad')]]
+    elif callback_data_message.startswith("approve"):
+        user_id=callback_data_message.split('#')[1]
+        approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}')],
+                   [InlineKeyboardButton("❌Отклонить", callback_data='reject')]]
         approve_admin_markup = InlineKeyboardMarkup(approve_admin)
         if 'photo' in query['message']:
             bot.send_photo(group_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''),reply_markup=approve_admin_markup)
@@ -389,7 +392,7 @@ def process_callback_query(json_data):
 
 
 
-        approve = [[InlineKeyboardButton("✅ Объявление отправлено на модерацию.", callback_data='approve')],
+        approve = [[InlineKeyboardButton("✅ Объявление отправлено на модерацию.", callback_data='moderation')],
                    [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
         approve_markup = InlineKeyboardMarkup(approve)
         bot.edit_message_reply_markup(
@@ -397,7 +400,17 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=approve_markup
         )
+    elif callback_data_message.startswith("publish"):
+        user_id = callback_data_message.split('#')[1]
+        if 'photo' in query['message']:
+            bot.send_photo(main_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''))
+        else:
+            bot.send_message(main_id,text=query['message']['text'])
+        bot.send_message(user_id,text='🎉Ваш пост был успешно одобрен администратором и опубликован на канале!')
+        bot.delete_message(chat_id=group_id, message_id=message_id)
 
+    elif callback_data_message == "reject":
+        bot.delete_message(chat_id=group_id, message_id=message_id)
 
 
 
