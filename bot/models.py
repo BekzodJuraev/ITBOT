@@ -1,3 +1,10 @@
 from django.db import models
 
-# Create your models here.
+class Posts(models.Model):
+    user_id = models.BigIntegerField(unique=True, null=True, blank=True, default=None)
+    message_id=models.BigIntegerField(unique=True, null=True, blank=True, default=None)
+
+
+
+    def __str__(self):
+        return self.user_id

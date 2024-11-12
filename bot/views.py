@@ -5,7 +5,7 @@ import telegram
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import re
-
+from .models import Posts
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-4587708639
 main_id=-4563354620
@@ -406,14 +406,43 @@ def process_callback_query(json_data):
     elif callback_data_message.startswith("publish"):
         user_id = callback_data_message.split('#')[1]
         if 'photo' in query['message']:
-            bot.send_photo(main_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''))
+            sent_message=bot.send_photo(main_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''))
         else:
-            bot.send_message(main_id,text=query['message']['text'])
+            sent_message=bot.send_message(main_id,text=query['message']['text'])
+
+        Posts.objects.create(user_id=user_id,message_id=sent_message.message_id)
+
+
         bot.send_message(user_id,text='🎉Ваш пост был успешно одобрен администратором и опубликован на канале!')
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
     elif callback_data_message == "reject":
         bot.delete_message(chat_id=group_id, message_id=message_id)
+
+
+    elif callback_data_message == "posts":
+        try:
+            delete_post = [[InlineKeyboardButton("❌Удалить", callback_data='delete_posts#1165')]]
+            delete_post_markup = InlineKeyboardMarkup(delete_post)
+
+            bot.copy_message(531080457, from_chat_id=main_id, message_id=1165, reply_markup=delete_post_markup)
+        except:
+            pass
+
+
+    elif callback_data_message.startswith('delete_posts'):
+        delete_message=callback_data_message.split('#')[1]
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="❌Этот пост был удалён с канала."
+        )
+        bot.delete_message(main_id,message_id=delete_message)
+
+
+
+
 
 
 
