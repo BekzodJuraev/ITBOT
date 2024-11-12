@@ -163,6 +163,8 @@ def process_message(json_data):
         else:
             bot.send_message(chat_id,text=text,reply_markup=approve_markup)
 
+        saved_photo=None
+
         user_states.pop(chat_id)
 
 
@@ -422,12 +424,15 @@ def process_callback_query(json_data):
 
     elif callback_data_message == "posts":
         try:
-            delete_post = [[InlineKeyboardButton("❌Удалить", callback_data='delete_posts#1165')]]
-            delete_post_markup = InlineKeyboardMarkup(delete_post)
+            post=Posts.objects.filter(user_id=chat_id)
+            for item in post:
+                delete_post = [[InlineKeyboardButton("❌Удалить", callback_data=f'delete_posts#{item.message_id}')]]
+                delete_post_markup = InlineKeyboardMarkup(delete_post)
+                bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id, reply_markup=delete_post_markup)
 
-            bot.copy_message(531080457, from_chat_id=main_id, message_id=1165, reply_markup=delete_post_markup)
-        except:
-            pass
+
+        except Exception as e:
+            print(e)
 
 
     elif callback_data_message.startswith('delete_posts'):
@@ -436,9 +441,10 @@ def process_callback_query(json_data):
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text="❌Этот пост был удалён с канала."
+            text='❌Этот пост был удалён с канала.'
         )
-        bot.delete_message(main_id,message_id=delete_message)
+
+        #bot.delete_message(main_id,message_id=delete_message)
 
 
 
