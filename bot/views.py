@@ -80,6 +80,7 @@ description=None
 city=None
 nazad_key = [[InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
 nazad_markup = InlineKeyboardMarkup(nazad_key)
+call=None
 def process_message(json_data):
     global saved_photo,price,description,city,phone
     chat_id = json_data['message']['chat']['id']
@@ -143,8 +144,9 @@ def process_message(json_data):
                 [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
         approve_markup = InlineKeyboardMarkup(approve)
         city=message_text
+
         text = (
-            f"Тип: #Продажа\n"
+            f"Тип:#{'Продажа' if call == 'sell' else 'Покупка'}\n"
             f"Категория: #{skip_catergory}\n"
             f"Подкатегория: #{skip_pod_category}\n"
             f"Под: #{skip_pod_pod_category}\n"
@@ -209,7 +211,7 @@ def generate_category_keyboard(chat_id):
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
     message_id=query['message']['message_id']
@@ -292,7 +294,8 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=continue_markup
         )
-    elif callback_data_message == 'sell':
+    elif callback_data_message == 'sell' or callback_data_message =='buy':
+        call=callback_data_message
 
 
         bot.edit_message_text(
