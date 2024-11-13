@@ -197,7 +197,7 @@ def process_message(json_data):
                 success_count += 1
             except Exception as e:
                 failure_count += 1
-                print(f"Failed to send to {user_id}: {e}")
+                print(f"Failed to send to {item.user_id}: {e}")
 
         approve_ads = [[InlineKeyboardButton("🔙Меню", callback_data='statics_nazad')]]
         approve_ads_markup = InlineKeyboardMarkup(approve_ads)
