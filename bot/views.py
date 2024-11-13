@@ -9,6 +9,7 @@ from .models import Posts
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-4587708639
 main_id=-4563354620
+admin=531080457
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 @csrf_exempt
@@ -25,6 +26,13 @@ def webhook(request):
     else:
         return HttpResponse(status=405)
 
+
+admin_keyboard=[
+                    [InlineKeyboardButton("🚀Рассылка", callback_data='ads')],
+                    [InlineKeyboardButton("📊Статистика", callback_data='statics')]
+                ]
+admin_keyboard_markup = InlineKeyboardMarkup(admin_keyboard)
+admin_menu_text="👋Добро пожаловать в административную панель."
 inline_keyboard = [
             [InlineKeyboardButton("💰 Продажа", callback_data='sell'),
              InlineKeyboardButton("🛒 Покупка", callback_data='buy')],
@@ -177,7 +185,10 @@ def process_message(json_data):
             text = (f"✨ Привет! Этот бот создан для удобной и быстрой публикации "
                     f"объявлений на канале @ITbarakholka. 🚀 Рад приветствовать тебя, @{chat_username}!")
             bot.send_message(chat_id, text, reply_markup=inline_markup)
+        elif message_text == '/admin':
+            if chat_id == admin:
 
+                bot.send_message(chat_id,text=admin_menu_text,reply_markup=admin_keyboard_markup)
 user_selected_category = {}
 def generate_category_keyboard(chat_id):
     categories = [
@@ -457,6 +468,30 @@ def process_callback_query(json_data):
 
         except Exception as e:
             print(e)
+    elif callback_data_message == 'statics':
+        statics_nazad = [[InlineKeyboardButton("🔙Назад", callback_data='statics_nazad')]]
+        statics_nazad_markup = InlineKeyboardMarkup(statics_nazad)
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="Текущая статистика:  📊 Общее количество пользователей канала: 1000 👥 Активные пользователи канала: 700 🤖Всего пользователей в боте: 1700"
+        )
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=statics_nazad_markup
+        )
+    elif callback_data_message == 'statics_nazad':
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=admin_menu_text
+        )
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=admin_keyboard_markup
+        )
 
 
 
