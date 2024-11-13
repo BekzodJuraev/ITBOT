@@ -438,13 +438,27 @@ def process_callback_query(json_data):
     elif callback_data_message.startswith('delete_posts'):
         delete_message=callback_data_message.split('#')[1]
 
-        bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=message_id,
-            text='❌Этот пост был удалён с канала.'
-        )
+        try:
+            if 'photo' in query['message']:
+                bot.edit_message_caption(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    caption='❌Этот пост был удалён с канала.'
+                )
+            else:
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text='❌Этот пост был удалён с канала.'
+                )
 
-        #bot.delete_message(main_id,message_id=delete_message)
+            bot.delete_message(main_id, message_id=delete_message)
+            Posts.objects.filter(message_id=delete_message).delete()
+
+        except Exception as e:
+            print(e)
+
+
 
 
 
