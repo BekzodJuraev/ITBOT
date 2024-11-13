@@ -462,10 +462,24 @@ def process_callback_query(json_data):
         user_id = callback_data_message.split('#')[1]
         if 'photo' in query['message']:
             sent_message=bot.send_photo(main_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''))
+            text=query['message'].get('caption', '')
         else:
             sent_message=bot.send_message(main_id,text=query['message']['text'])
+            text=query['message']['text']
 
-        Posts.objects.create(user_id=user_id,message_id=sent_message.message_id)
+        lines=text.split("\n")
+        category = None
+        pod = None
+
+        for line in lines:
+            if line.startswith("Категория:"):
+                category = line.split(": #")[1]
+            elif line.startswith("Подкатегория:"):
+                pod = line.split(": #")[1]
+
+
+
+        Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod)
 
 
         bot.send_message(user_id,text='🎉Ваш пост был успешно одобрен администратором и опубликован на канале!')
