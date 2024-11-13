@@ -5,7 +5,7 @@ import telegram
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import re
-from .models import Posts
+from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-4587708639
 main_id=-4563354620
@@ -28,11 +28,14 @@ def webhook(request):
 
 
 admin_keyboard=[
-                    [InlineKeyboardButton("🚀Рассылка", callback_data='ads')],
+                    [InlineKeyboardButton("🚀Рассылка", callback_data='admin_ads')],
                     [InlineKeyboardButton("📊Статистика", callback_data='statics')]
                 ]
 admin_keyboard_markup = InlineKeyboardMarkup(admin_keyboard)
 admin_menu_text="👋Добро пожаловать в административную панель."
+
+statics_nazad = [[InlineKeyboardButton("🔙Назад", callback_data='statics_nazad')]]
+statics_nazad_markup = InlineKeyboardMarkup(statics_nazad)
 inline_keyboard = [
             [InlineKeyboardButton("💰 Продажа", callback_data='sell'),
              InlineKeyboardButton("🛒 Покупка", callback_data='buy')],
@@ -93,6 +96,7 @@ def process_message(json_data):
     global saved_photo,price,description,city,phone
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
+    message=json_data['message']
     chat_username = json_data['message']['chat'].get('username', 'username')
     chat_name = json_data['message']['chat'].get('first_name', 'first_name')
 
@@ -174,6 +178,39 @@ def process_message(json_data):
         saved_photo=None
 
         user_states.pop(chat_id)
+    elif user_states.get(chat_id) == 'awaiting_admin':
+        success_count = 0
+        failure_count = 0
+
+        profiles = Telegram_users.objects.all()
+        for item in profiles:
+            try:
+                if 'photo' in message:
+                    response = bot.send_photo(item.user_id, photo=message['photo'][0]['file_id'],
+                                              caption=message.get('caption', ''))
+
+                elif 'video' in message:
+                    response = bot.send_video(item.user_id, video=message['video']['file_id'],
+                                              caption=message.get('caption', ''))
+                else:
+                    response = bot.send_message(chat_id=item.user_id, text=message_text)
+                success_count += 1
+            except Exception as e:
+                failure_count += 1
+                print(f"Failed to send to {user_id}: {e}")
+
+        approve_ads = [[InlineKeyboardButton("🔙Меню", callback_data='statics_nazad')]]
+        approve_ads_markup = InlineKeyboardMarkup(approve_ads)
+        bot.send_message(chat_id,text=f"✅ Рассылка успешно отправлена пользователям бота. Удалось отправить: {success_count} Не удалось отправить: {failure_count}",reply_markup=approve_ads_markup)
+        user_states.pop(chat_id)
+
+
+
+
+        # if saved_photo:
+        #     bot.send_photo(chat_id,caption=text,photo=saved_photo,reply_markup=approve_markup)
+        # else:
+        #     bot.send_message(chat_id,text=text,reply_markup=approve_markup)
 
 
 
@@ -182,12 +219,17 @@ def process_message(json_data):
     else:
 
         if message_text == '/start':
+            try:
+                Telegram_users.objects.create(user_id=chat_id)
+            except Exception as e:
+                print(e)
+
+
             text = (f"✨ Привет! Этот бот создан для удобной и быстрой публикации "
                     f"объявлений на канале @ITbarakholka. 🚀 Рад приветствовать тебя, @{chat_username}!")
             bot.send_message(chat_id, text, reply_markup=inline_markup)
         elif message_text == '/admin':
             if chat_id == admin:
-
                 bot.send_message(chat_id,text=admin_menu_text,reply_markup=admin_keyboard_markup)
 user_selected_category = {}
 def generate_category_keyboard(chat_id):
@@ -469,12 +511,12 @@ def process_callback_query(json_data):
         except Exception as e:
             print(e)
     elif callback_data_message == 'statics':
-        statics_nazad = [[InlineKeyboardButton("🔙Назад", callback_data='statics_nazad')]]
-        statics_nazad_markup = InlineKeyboardMarkup(statics_nazad)
+        member_count=bot.get_chat_member_count(chat_id)
+        profile_count=Telegram_users.objects.all().count()
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text="Текущая статистика:  📊 Общее количество пользователей канала: 1000 👥 Активные пользователи канала: 700 🤖Всего пользователей в боте: 1700"
+            text=f"Текущая статистика:  📊 Общее количество пользователей канала: {member_count} 👥 Активные пользователи канала: {member_count} 🤖Всего пользователей в боте: {profile_count}"
         )
         bot.edit_message_reply_markup(
             chat_id=chat_id,
@@ -492,6 +534,22 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=admin_keyboard_markup
         )
+
+    elif callback_data_message == 'admin_ads':
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text='💬Введите текст сообщения для рассылки.'
+        )
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=statics_nazad_markup
+        )
+        user_states[chat_id] = 'awaiting_admin'
+
+
+
 
 
 
