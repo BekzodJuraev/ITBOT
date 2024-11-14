@@ -100,7 +100,8 @@ description=None
 city=None
 nazad_key = [[InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
 nazad_markup = InlineKeyboardMarkup(nazad_key)
-
+bron = [[InlineKeyboardButton("📝Забронировать", callback_data='bron')]]
+bron_markup = InlineKeyboardMarkup(bron)
 call=None
 def process_message(json_data):
     global saved_photo,price,description,city,phone
@@ -549,11 +550,12 @@ def process_callback_query(json_data):
 
     elif callback_data_message.startswith("publish"):
         user_id = callback_data_message.split('#')[1]
+
         if 'photo' in query['message']:
-            sent_message=bot.send_photo(main_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''))
+            sent_message=bot.send_photo(main_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''),reply_markup=bron_markup)
             text=query['message'].get('caption', '')
         else:
-            sent_message=bot.send_message(main_id,text=query['message']['text'])
+            sent_message=bot.send_message(main_id,text=query['message']['text'],reply_markup=bron_markup)
             text=query['message']['text']
 
         lines=text.split("\n")
@@ -574,6 +576,34 @@ def process_callback_query(json_data):
         bot.send_message(user_id,text='🎉Ваш пост был успешно одобрен администратором и опубликован на канале!')
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
+    elif callback_data_message == 'bron':
+        bron_rejecet = [[InlineKeyboardButton("❌Забронировано", callback_data='bron_reject')]]
+        bron_rejecet_markup = InlineKeyboardMarkup(bron_rejecet)
+        bot.edit_message_reply_markup(
+            chat_id=main_id,
+            message_id=message_id,
+            reply_markup=bron_rejecet_markup
+        )
+        profile=Posts.objects.filter(message_id=message_id).first()
+        if profile:
+            user=bot.get_chat(profile.user_id)
+            username = user.username if user.username else "Пользователь"
+            notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'bron_reject#{message_id}')]]
+            notify_rejecet_markup = InlineKeyboardMarkup(notify_rejecet)
+            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем @{username}. Свяжитесь с ним для уточнения деталей.",reply_markup=notify_rejecet_markup)
+
+
+
+
+
+
+    elif callback_data_message.startswith('bron_reject'):
+        id_message=callback_data_message.split('#')[1]
+        bot.edit_message_reply_markup(
+            chat_id=main_id,
+            message_id=id_message,
+            reply_markup=bron_markup
+        )
     elif callback_data_message == "reject":
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
