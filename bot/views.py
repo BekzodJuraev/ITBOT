@@ -84,6 +84,12 @@ sell_markup = InlineKeyboardMarkup(sell)
 
 nazad_description = [[InlineKeyboardButton("🔙Назад", callback_data='pod')]]
 nazad_description_markup = InlineKeyboardMarkup(nazad_description)
+awaiting_description = [[InlineKeyboardButton("🔙Назад", callback_data='awaiting_description')]]
+awaiting_description_markup = InlineKeyboardMarkup(awaiting_description)
+awaiting_price = [[InlineKeyboardButton("🔙Назад", callback_data='awaiting_price')]]
+awaiting_price_markup = InlineKeyboardMarkup(awaiting_price)
+awaiting_city = [[InlineKeyboardButton("🔙Назад", callback_data='awaiting_city')]]
+awaiting_city_markup = InlineKeyboardMarkup(awaiting_city)
 saved_photo = None
 skip_catergory=None
 skip_pod_category=None
@@ -94,6 +100,7 @@ description=None
 city=None
 nazad_key = [[InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
 nazad_markup = InlineKeyboardMarkup(nazad_key)
+
 call=None
 def process_message(json_data):
     global saved_photo,price,description,city,phone
@@ -142,17 +149,22 @@ def process_message(json_data):
                 reply_markup=sell_skip_markup
             )
     elif user_states.get(chat_id) == 'awaiting_description':
+
+
         description=message_text
-        bot.send_message(chat_id,text='📞 Отправьте свои контактные данные.', reply_markup=nazad_description_markup)
+        bot.send_message(chat_id,text='📞 Отправьте свои контактные данные.', reply_markup=awaiting_description_markup)
         user_states[chat_id] = 'awaiting_price'
     elif user_states.get(chat_id) == 'awaiting_price':
-        phone=message_text
 
-        bot.send_message(chat_id,text='💰 Укажите стоимость товара', reply_markup=nazad_markup)
+
+        phone=message_text
+        bot.send_message(chat_id,text='💰 Укажите стоимость товара', reply_markup=awaiting_price_markup)
         user_states[chat_id] = 'awaiting_city'
     elif user_states.get(chat_id) == 'awaiting_city':
+
+
         price=message_text
-        bot.send_message(chat_id,text='🏙️ Укажите город одним словом или с нижним подчёркиванием.  Например: Санкт_Петербург. (Это нужно для формирования хэштега города, чтобы облегчить поиск).', reply_markup=nazad_markup)
+        bot.send_message(chat_id,text='🏙️ Укажите город одним словом или с нижним подчёркиванием.  Например: Санкт_Петербург. (Это нужно для формирования хэштега города, чтобы облегчить поиск).', reply_markup=awaiting_city_markup)
         user_states[chat_id] = 'awaiting_complete'
     elif user_states.get(chat_id) == 'awaiting_complete':
         approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}')],
@@ -352,6 +364,49 @@ def process_callback_query(json_data):
         )
 
 
+
+    elif callback_data_message == "awaiting_description":
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="📝 Пожалуйста, пришлите описание."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=nazad_description_markup
+        )
+
+        user_states[chat_id] = 'awaiting_description'
+    elif callback_data_message == 'awaiting_price':
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="📞 Отправьте свои контактные данные."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=awaiting_description_markup
+        )
+        user_states[chat_id] = 'awaiting_price'
+
+    elif callback_data_message == "awaiting_city":
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="💰 Укажите стоимость товара"
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=awaiting_price_markup
+        )
+        user_states[chat_id] = 'awaiting_city'
 
 
     elif callback_data_message == "category":
