@@ -81,6 +81,9 @@ text_sell="📸 Пожалуйста, отправьте фото. Не боле
 sell = [[InlineKeyboardButton("➡️Пропустить", callback_data='sell_skip')],
         [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
 sell_markup = InlineKeyboardMarkup(sell)
+
+nazad_description = [[InlineKeyboardButton("🔙Назад", callback_data='pod')]]
+nazad_description_markup = InlineKeyboardMarkup(nazad_description)
 saved_photo = None
 skip_catergory=None
 skip_pod_category=None
@@ -140,7 +143,7 @@ def process_message(json_data):
             )
     elif user_states.get(chat_id) == 'awaiting_description':
         description=message_text
-        bot.send_message(chat_id,text='📞 Отправьте свои контактные данные.', reply_markup=nazad_markup)
+        bot.send_message(chat_id,text='📞 Отправьте свои контактные данные.', reply_markup=nazad_description_markup)
         user_states[chat_id] = 'awaiting_price'
     elif user_states.get(chat_id) == 'awaiting_price':
         phone=message_text
@@ -161,7 +164,7 @@ def process_message(json_data):
             f"Тип:#{'Продажа' if call == 'sell' else 'Покупка'}\n"
             f"Категория: #{skip_catergory}\n"
             f"Подкатегория: #{skip_pod_category}\n"
-            f"Под: #{skip_pod_pod_category}\n"
+            f"Подкатегория: #{skip_pod_pod_category}\n"
             f"Пользователь: #{chat_name}\n"
             f"Описание: {description}\n"
             f"Контакты: {phone}\n"
@@ -276,10 +279,17 @@ def process_callback_query(json_data):
 
 
     if callback_data_message == "ads":
-        bot.send_message(
-            chat_id,
-            text="📢 Вы можете разместить свою рекламу на нашем канале и в боте! "
-                 "Пожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!",
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="📢 Вы можете разместить свою рекламу на нашем канале и в боте !   Текущая статистика:  📊 Общее количество пользователей: 1000 👥 Активные пользователи: 700   Пожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
             reply_markup=nazad_markup
         )
 
@@ -287,7 +297,18 @@ def process_callback_query(json_data):
 
 
     elif callback_data_message == "support":
-        bot.send_message(chat_id,text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!",reply_markup=nazad_markup)
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!"
+
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=nazad_markup
+        )
         user_states[chat_id] = 'awaiting_support_text'
 
     elif callback_data_message == "nazad":
@@ -423,7 +444,6 @@ def process_callback_query(json_data):
             pass
 
 
-
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
@@ -433,7 +453,7 @@ def process_callback_query(json_data):
         bot.edit_message_reply_markup(
             chat_id=chat_id,
             message_id=message_id,
-            reply_markup=nazad_markup
+            reply_markup=nazad_description_markup
         )
         user_states[chat_id] = 'awaiting_description'
 
@@ -445,19 +465,33 @@ def process_callback_query(json_data):
         approve_admin_markup = InlineKeyboardMarkup(approve_admin)
         if 'photo' in query['message']:
             bot.send_photo(group_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''),reply_markup=approve_admin_markup)
+            bot.edit_message_caption(
+                chat_id=chat_id,
+                message_id=message_id,
+                caption="✅ Объявление отправлено на модерацию."
+            )
+            bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=nazad_markup
+            )
         else:
             bot.send_message(group_id,text=query['message']['text'],reply_markup=approve_admin_markup)
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text="✅ Объявление отправлено на модерацию."
+            )
+            bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=nazad_markup
+            )
 
 
 
-        approve = [[InlineKeyboardButton("✅ Объявление отправлено на модерацию.", callback_data='moderation')],
-                   [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
-        approve_markup = InlineKeyboardMarkup(approve)
-        bot.edit_message_reply_markup(
-            chat_id=chat_id,
-            message_id=message_id,
-            reply_markup=approve_markup
-        )
+
+
     elif callback_data_message.startswith("publish"):
         user_id = callback_data_message.split('#')[1]
         if 'photo' in query['message']:
