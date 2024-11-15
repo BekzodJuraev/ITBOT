@@ -253,6 +253,7 @@ def generate_category_keyboard(chat_id):
         ("ПК", 'pc'),
         ("Товары для компьютера", 'pc_comp'),
         ("Комплектующие для компьютера", 'pc_comp1'),
+        ("Серверное оборудование", 'pc_server'),
         ("Сетевое оборудование", 'pc_network'),
         ("Офисная техника и расходники", 'pc_office'),
         ("Телефоны", 'pc_phone'),
@@ -261,10 +262,10 @@ def generate_category_keyboard(chat_id):
 
     continue_key = []
 
-    # Loop through all categories and mark the selected category with ✅
+
     for category_name, callback_value in categories:
         # If the category is selected, add a ✅ next to it
-        if user_selected_category.get(chat_id) == callback_value:
+        if chat_id in user_selected_category and callback_value in user_selected_category.get(chat_id):
             category_button = InlineKeyboardButton(f"✅ {category_name}", callback_data=callback_value)
         else:
             category_button = InlineKeyboardButton(category_name, callback_data=callback_value)
@@ -274,7 +275,7 @@ def generate_category_keyboard(chat_id):
     # Add buttons for "Продолжить", "Искать", and "Назад"
     continue_key.extend([
         [InlineKeyboardButton("➡️Продолжить", callback_data='pc_continue')],
-        [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+        [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
         [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
     ])
 
@@ -338,31 +339,105 @@ def process_callback_query(json_data):
             reply_markup=inline_markup
         )
 
-    elif callback_data_message == "pc_continue":
+    # elif callback_data_message == "pc_continue":
+    #
+    #     pc_continue = [
+    #         [InlineKeyboardButton("Стационарные ПК", callback_data='pc_desktop')],
+    #         [InlineKeyboardButton("Ноутбуки", callback_data='pc_laptop')],
+    #         [InlineKeyboardButton("Моноблоки", callback_data='pc_desktop')],
+    #         [InlineKeyboardButton("Планшеты", callback_data='pc_monoblock')],
+    #         [InlineKeyboardButton("➡️Продолжить", callback_data='pc_post')],
+    #         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+    #         [InlineKeyboardButton("🔙Назад", callback_data='category')],
+    #
+    #     ]
+    #     pc_continue_markup = InlineKeyboardMarkup(pc_continue)
+    #
+    #     bot.edit_message_text(
+    #         chat_id=chat_id,
+    #         message_id=message_id,
+    #         text="🔽 Выберите подкатегорию, отмечая её галочкой ✅. Или же, можете пропустить этот шаг и просто нажать «➡️Продолжить» ."
+    #     )
+    #
+    #     bot.edit_message_reply_markup(
+    #         chat_id=chat_id,
+    #         message_id=query['message']['message_id'],
+    #         reply_markup=pc_continue_markup
+    #     )
 
-        pc_continue = [
-            [InlineKeyboardButton("Стационарные ПК", callback_data='pc_desktop')],
-            [InlineKeyboardButton("Ноутбуки", callback_data='pc_laptop')],
-            [InlineKeyboardButton("Моноблоки", callback_data='pc_desktop')],
-            [InlineKeyboardButton("Планшеты", callback_data='pc_monoblock')],
-            [InlineKeyboardButton("➡️Продолжить", callback_data='pc_post')],
-            [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
-            [InlineKeyboardButton("🔙Назад", callback_data='category')],
+    elif callback_data_message == "category":
+        text = "🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
+        continue_markup = generate_category_keyboard(chat_id)
 
-        ]
-        pc_continue_markup = InlineKeyboardMarkup(pc_continue)
-
+        # Edit the message with updated text and keyboard
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text="🔽 Выберите подкатегорию, отмечая её галочкой ✅. Или же, можете пропустить этот шаг и просто нажать «➡️Продолжить» ."
+            text=text
         )
 
         bot.edit_message_reply_markup(
             chat_id=chat_id,
-            message_id=query['message']['message_id'],
-            reply_markup=pc_continue_markup
+            message_id=message_id,
+            reply_markup=continue_markup
         )
+    elif callback_data_message in ['pc', 'pc_comp', 'pc_comp1', 'pc_network', 'pc_office', 'pc_phone', 'pf_software','pc_server']:
+        selected_category=callback_data_message
+        if chat_id in user_selected_category and selected_category in user_selected_category.get(chat_id):
+            user_selected_category[chat_id].remove(selected_category)
+
+        else:
+            if chat_id not in user_selected_category:
+                user_selected_category[chat_id]=[selected_category]
+            else:
+                user_selected_category[chat_id].append(selected_category)
+
+
+
+        text = "🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
+        continue_markup = generate_category_keyboard(chat_id)
+        bot.edit_message_text(
+        chat_id = chat_id,
+        message_id = message_id,
+        text = text
+        )
+        bot.edit_message_reply_markup(
+        chat_id = chat_id,
+        message_id = message_id,
+        reply_markup = continue_markup
+        )
+
+
+
+    elif callback_data_message == "pc_search":
+        search=user_selected_category.get(chat_id)
+        posts=Posts.objects.filter(category__in=search)
+        message_count = 0
+
+        if posts:
+            for item in posts:
+                bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
+                message_count += 1
+                if message_count == 1:
+                    continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='bron')],
+                            [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
+                    continue_button_markup = InlineKeyboardMarkup(continue_button)
+                    bot.send_message(chat_id,text='Показаны посты, подходящих под выбранные категории. Чтобы увидеть больше, нажмите кнопку «⬇️Показать ещё».',reply_markup=continue_button_markup)
+
+        else:
+            pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
+            pc_search_markup = InlineKeyboardMarkup(pc_search)
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text="❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории."
+            )
+            bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=pc_search_markup
+            )
+        user_selected_category.pop(chat_id)
 
 
 
@@ -410,22 +485,7 @@ def process_callback_query(json_data):
         user_states[chat_id] = 'awaiting_city'
 
 
-    elif callback_data_message == "category":
-        text="🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
-        continue_markup = generate_category_keyboard(chat_id)
 
-        # Edit the message with updated text and keyboard
-        bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=message_id,
-            text=text
-        )
-
-        bot.edit_message_reply_markup(
-            chat_id=chat_id,
-            message_id=message_id,
-            reply_markup=continue_markup
-        )
     elif callback_data_message == 'sell' or callback_data_message =='buy':
         call=callback_data_message
 
@@ -565,6 +625,20 @@ def process_callback_query(json_data):
         for line in lines:
             if line.startswith("Категория:"):
                 category = line.split(": #")[1]
+                if category.startswith('ПК'):
+                    category = 'pc'
+                elif category.startswith('Товары'):
+                    category = 'pc_comp'
+                elif category.startswith('Комплектующие'):
+                    category = 'pc_comp1'
+                elif category.startswith('Серверное'):
+                    category = 'pc_server'
+                elif category.startswith('Сетевое'):
+                    category = 'pc_network'
+                elif category.startswith('Офисная'):
+                    category = 'pc_office'
+                elif category.startswith('Программное'):
+                    category = 'pf_software'
             elif line.startswith("Подкатегория:"):
                 pod = line.split(": #")[1]
 
