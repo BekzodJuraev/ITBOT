@@ -274,7 +274,7 @@ def generate_category_keyboard(chat_id):
 
     # Add buttons for "Продолжить", "Искать", and "Назад"
     continue_key.extend([
-        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_continue')],
+        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
         [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
     ])
@@ -668,7 +668,7 @@ def process_callback_query(json_data):
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
     elif callback_data_message == 'bron':
-        bron_rejecet = [[InlineKeyboardButton("❌Забронировано", callback_data='bron_reject')]]
+        bron_rejecet = [[InlineKeyboardButton("❌Забронировано", callback_data='empty')]]
         bron_rejecet_markup = InlineKeyboardMarkup(bron_rejecet)
         bot.edit_message_reply_markup(
             chat_id=main_id,
@@ -678,10 +678,11 @@ def process_callback_query(json_data):
         profile=Posts.objects.filter(message_id=message_id).first()
         if profile:
             user=bot.get_chat(profile.user_id)
-            username = user.username if user.username else "Пользователь"
+            #username = user.username if user.username else user.first_name
+            mention_text = f"[{user.first_name}](tg://user?id={profile.user_id})"
             notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'bron_reject#{message_id}')]]
             notify_rejecet_markup = InlineKeyboardMarkup(notify_rejecet)
-            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем @{username}. Свяжитесь с ним для уточнения деталей.",reply_markup=notify_rejecet_markup)
+            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем {mention_text}. Свяжитесь с ним для уточнения деталей.",reply_markup=notify_rejecet_markup,parse_mode="Markdown")
 
 
 
@@ -689,7 +690,8 @@ def process_callback_query(json_data):
 
 
     elif callback_data_message.startswith('bron_reject'):
-        id_message=callback_data_message.split('#')[1]
+        id_message = callback_data_message.split('#')[1]
+
         bot.edit_message_reply_markup(
             chat_id=main_id,
             message_id=id_message,
