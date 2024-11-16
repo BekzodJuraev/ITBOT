@@ -286,6 +286,8 @@ def process_callback_query(json_data):
     global skip_catergory,skip_pod_category,skip_pod_pod_category,call
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
+
+    #chat_name=query['message']['chat']['first_name']
     message_id=query['message']['message_id']
 
     callback_data_message = query['data']
@@ -675,12 +677,14 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=bron_rejecet_markup
         )
+        name = query.get('from', {}).get('first_name', 'Unknown')
+        user=query['from']['id']
         profile=Posts.objects.filter(message_id=message_id).first()
         if profile:
-            user=bot.get_chat(profile.user_id)
+            #user=bot.get_chat(profile.user_id)
             #username = user.username if user.username else user.first_name
-            mention_text = f"[{user.first_name}](tg://user?id={profile.user_id})"
-            notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'bron_reject#{message_id}')]]
+            mention_text = f"[{name}](tg://user?id={user})"
+            notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'bron_reject#{message_id}#{user}')]]
             notify_rejecet_markup = InlineKeyboardMarkup(notify_rejecet)
             bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем {mention_text}. Свяжитесь с ним для уточнения деталей.",reply_markup=notify_rejecet_markup,parse_mode="Markdown")
 
@@ -691,12 +695,14 @@ def process_callback_query(json_data):
 
     elif callback_data_message.startswith('bron_reject'):
         id_message = callback_data_message.split('#')[1]
+        id_user=callback_data_message.split('#')[2]
 
         bot.edit_message_reply_markup(
             chat_id=main_id,
             message_id=id_message,
             reply_markup=bron_markup
         )
+        bot.send_message(chat_id=id_user,text=f"🔓 Кнопка 📝Забронировать снова активирована для вашего объявления.")
     elif callback_data_message == "reject":
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
