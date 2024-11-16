@@ -122,18 +122,18 @@ def process_message(json_data):
             end_markup = InlineKeyboardMarkup(end)
             bot.send_message(user_id,text=f'Ответ от поддержки: {message_text}', reply_markup=end_markup)
 
+
     # Check if the user is in "ads" state
     if user_states.get(chat_id) == 'awaiting_ad_text':
 
         user_states.pop(chat_id)
-        ads = (f"📢 Новая заявка на размещение рекламы! Текст рекламы: {message_text} "
-               f"💬 Свяжитесь с пользователем @{chat_username} для уточнения деталей")
+        ads = (f"📢 Новая заявка на размещение\nрекламы!\nТекст рекламы:\n{message_text} "
+               f"\n💬 Свяжитесь с пользователем\n@{chat_username} для уточнения деталей")
         bot.send_message(group_id, text=ads)
         bot.send_message(chat_id, text="✅ Ваша реклама успешно отправлена! Ожидайте, администратор свяжется с вами для уточнения деталей.")
 
     elif user_states.get(chat_id) == 'awaiting_support_text':
 
-        user_states.pop(chat_id)
         support = f"Пользователь @{chat_username} id:{chat_id} написал: {message_text}"
 
         bot.send_message(group_id, text=support)
@@ -297,7 +297,7 @@ def process_callback_query(json_data):
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text="📢 Вы можете разместить свою рекламу на нашем канале и в боте !   Текущая статистика:  📊 Общее количество пользователей: 1000 👥 Активные пользователи: 700   Пожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+            text="📢 Вы можете разместить свою рекламу на нашем канале и в боте !\n\nТекущая статистика:  📊 Общее количество пользователей: \n1000 \n👥 Активные пользователи: 700   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
 
         )
 
@@ -326,6 +326,14 @@ def process_callback_query(json_data):
         user_states[chat_id] = 'awaiting_support_text'
 
     elif callback_data_message == "nazad":
+        try:
+            user_states.pop(chat_id)
+        except Exception as e:
+            print(e)
+
+
+
+
 
         bot.edit_message_text(
             chat_id=chat_id,
@@ -410,35 +418,41 @@ def process_callback_query(json_data):
 
 
     elif callback_data_message == "pc_search":
-        search=user_selected_category.get(chat_id)
-        posts=Posts.objects.filter(category__in=search)
-        message_count = 0
+        try:
+            search = user_selected_category.get(chat_id)
+            posts = Posts.objects.filter(category__in=search)
+            message_count = 0
 
-        if posts:
-            for item in posts:
-                bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
-                message_count += 1
-                if message_count == 1:
-                    continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='more')],
-                            [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
-                    continue_button_markup = InlineKeyboardMarkup(continue_button)
-                    bot.send_message(chat_id,text='Показаны посты, подходящих под выбранные категории. Чтобы увидеть больше, нажмите кнопку «⬇️Показать ещё».',reply_markup=continue_button_markup)
-                    message_count=0
+            if posts:
+                for item in posts:
+                    bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
+                    message_count += 1
+                    if message_count == 1:
+                        continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='more')],
+                                           [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
+                        continue_button_markup = InlineKeyboardMarkup(continue_button)
+                        bot.send_message(chat_id,
+                                         text='Показаны посты, подходящих под выбранные категории. Чтобы увидеть больше, нажмите кнопку «⬇️Показать ещё».',
+                                         reply_markup=continue_button_markup)
+                        message_count = 0
 
-        else:
-            pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
-            pc_search_markup = InlineKeyboardMarkup(pc_search)
-            bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text="❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории."
-            )
-            bot.edit_message_reply_markup(
-                chat_id=chat_id,
-                message_id=message_id,
-                reply_markup=pc_search_markup
-            )
-        user_selected_category.pop(chat_id)
+            else:
+                pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
+                pc_search_markup = InlineKeyboardMarkup(pc_search)
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text="❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории."
+                )
+                bot.edit_message_reply_markup(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    reply_markup=pc_search_markup
+                )
+            user_selected_category.pop(chat_id)
+        except Exception as e:
+            print(e)
+
 
 
     elif callback_data_message == 'more':
