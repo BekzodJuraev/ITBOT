@@ -419,10 +419,11 @@ def process_callback_query(json_data):
                 bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
                 message_count += 1
                 if message_count == 1:
-                    continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='bron')],
+                    continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='more')],
                             [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
                     continue_button_markup = InlineKeyboardMarkup(continue_button)
                     bot.send_message(chat_id,text='Показаны посты, подходящих под выбранные категории. Чтобы увидеть больше, нажмите кнопку «⬇️Показать ещё».',reply_markup=continue_button_markup)
+                    message_count=0
 
         else:
             pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
@@ -440,6 +441,8 @@ def process_callback_query(json_data):
         user_selected_category.pop(chat_id)
 
 
+    elif callback_data_message == 'more':
+        bot.send_message(chat_id,text='❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории.')
 
     elif callback_data_message == "awaiting_description":
         bot.edit_message_text(
