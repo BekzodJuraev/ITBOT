@@ -9,7 +9,7 @@ from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-4587708639
 main_id=-4563354620
-admin=531080457
+admin=1650034270
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 @csrf_exempt
@@ -45,6 +45,14 @@ inline_keyboard = [
             [InlineKeyboardButton("📢 Купить рекламу", callback_data='ads')],
         ]
 inline_markup = InlineKeyboardMarkup(inline_keyboard)
+reply_keyboard = [
+    [KeyboardButton("💰 Продажа"), KeyboardButton("🛒 Покупка")],
+    [KeyboardButton("📋 Мои объявления")],
+    [KeyboardButton("🔍 Поиск по категориям")],
+    [KeyboardButton("🛠️ Поддержка")],
+    [KeyboardButton("📢 Купить рекламу")]
+]
+markup_reply = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 sell_skip = [
     [InlineKeyboardButton("💻ПК", callback_data='cat#ПК')],
@@ -104,7 +112,7 @@ bron = [[InlineKeyboardButton("📝Забронировать", callback_data='b
 bron_markup = InlineKeyboardMarkup(bron)
 call=None
 def process_message(json_data):
-    global saved_photo,price,description,city,phone
+    global saved_photo,price,description,city,phone,call
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
     message=json_data['message']
@@ -125,12 +133,14 @@ def process_message(json_data):
 
     # Check if the user is in "ads" state
     if user_states.get(chat_id) == 'awaiting_ad_text':
+        mention_text = f"[{chat_username}](tg://user?id={chat_id})"
+        #mention_text = f"[{name}](tg://user?id={user})"
 
-        user_states.pop(chat_id)
         ads = (f"📢 Новая заявка на размещение\nрекламы!\nТекст рекламы:\n{message_text} "
-               f"\n💬 Свяжитесь с пользователем\n@{chat_username} для уточнения деталей")
-        bot.send_message(group_id, text=ads)
-        bot.send_message(chat_id, text="✅ Ваша реклама успешно отправлена! Ожидайте, администратор свяжется с вами для уточнения деталей.")
+               f"\n💬 Свяжитесь с пользователем\n {mention_text} для уточнения деталей")
+        bot.send_message(group_id, text=ads,parse_mode="Markdown")
+        bot.send_message(chat_id, text=f"✅ Ваша реклама успешно отправлена! Ожидайте, администратор свяжется с вами для уточнения деталей.")
+        user_states.pop(chat_id)
 
     elif user_states.get(chat_id) == 'awaiting_support_text':
 
@@ -184,6 +194,7 @@ def process_message(json_data):
             f"Цена: {price}\n"
             f"Город: #{city}\n"
             f"Автор: @{chat_username}\n"
+            f"Айди: #{chat_id}\n"
             f"Отправлено через: @ITbarakholka_bot"
         )
         if saved_photo:
@@ -240,10 +251,54 @@ def process_message(json_data):
             except Exception as e:
                 print(e)
 
-
             text = (f"✨ Привет! Этот бот создан для удобной и быстрой публикации "
                     f"объявлений на канале @ITbarakholka. 🚀 Рад приветствовать тебя, @{chat_username}!")
-            bot.send_message(chat_id, text, reply_markup=inline_markup)
+            #bot.send_message(chat_id, text, reply_markup=inline_markup)
+            bot.send_message(chat_id, text,  reply_markup=markup_reply) ##repl=markup_reply
+        elif message_text == "💰 Продажа":
+            call = 'sell'
+
+            bot.send_message(chat_id,text="📸 Пожалуйста, отправьте фото. Не более 10 штук.",reply_markup=nazad_markup)
+            user_states[chat_id] = 'awaiting_photo'
+        elif message_text == "🛒 Покупка":
+            call ='buy'
+
+            bot.send_message(chat_id, text="📸 Пожалуйста, отправьте фото. Не более 10 штук.", reply_markup=sell_markup)
+            user_states[chat_id] = 'awaiting_photo'
+
+        elif message_text == "📋 Мои объявления":
+            try:
+                post = Posts.objects.filter(user_id=chat_id)
+                for item in post:
+                    delete_post = [[InlineKeyboardButton("❌Удалить", callback_data=f'delete_posts#{item.message_id}')]]
+                    delete_post_markup = InlineKeyboardMarkup(delete_post)
+                    bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id,
+                                     reply_markup=delete_post_markup)
+
+
+            except Exception as e:
+                print(e)
+            # Handle posts action
+
+        elif message_text == "🔍 Поиск по категориям":
+            text = "🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
+            continue_markup = generate_category_keyboard(chat_id)
+
+            bot.send_message(chat_id, text=text, reply_markup=continue_markup)
+        elif message_text == "🛠️ Поддержка":
+
+            bot.send_message(chat_id, text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!", reply_markup=nazad_markup)
+            user_states[chat_id] = 'awaiting_support_text'
+        elif message_text == "📢 Купить рекламу":
+            statics_bot = Telegram_users.objects.all().count()
+            text = f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\nТекущая статистика:  \n📊 Общее количество пользователей: {statics_bot} \n👥 Активные пользователи: {statics_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+
+            bot.send_message(chat_id, text=text, reply_markup=nazad_markup)
+            user_states[chat_id] = 'awaiting_ad_text'
+
+
+
+
         elif message_text == '/admin':
             if chat_id == admin:
                 bot.send_message(chat_id,text=admin_menu_text,reply_markup=admin_keyboard_markup)
@@ -295,11 +350,11 @@ def process_callback_query(json_data):
 
 
     if callback_data_message == "ads":
-
+        statics_bot=Telegram_users.objects.all().count()
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text="📢 Вы можете разместить свою рекламу на нашем канале и в боте !\n\nТекущая статистика:  📊 Общее количество пользователей: \n1000 \n👥 Активные пользователи: 700   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+            text=f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\n\nТекущая статистика:  📊 Общее количество пользователей: \n{statics_bot} \n👥 Активные пользователи: {statics_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
 
         )
 
@@ -332,22 +387,24 @@ def process_callback_query(json_data):
             user_states.pop(chat_id)
         except Exception as e:
             print(e)
+        bot.delete_message(chat_id,message_id=message_id)
+        bot.send_message(chat_id,text="Меню")
 
 
 
 
 
-        bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=message_id,
-            text="Меню:"  # Update the message text
-        )
-
-        bot.edit_message_reply_markup(
-            chat_id=chat_id,
-            message_id=query['message']['message_id'],
-            reply_markup=inline_markup
-        )
+        # bot.edit_message_text(
+        #     chat_id=chat_id,
+        #     message_id=message_id,
+        #     text="Меню:"  # Update the message text
+        # )
+        #
+        # bot.edit_message_reply_markup(
+        #     chat_id=chat_id,
+        #     message_id=query['message']['message_id'],
+        #     reply_markup=inline_markup
+        # )
 
     # elif callback_data_message == "pc_continue":
     #
@@ -507,19 +564,31 @@ def process_callback_query(json_data):
 
     elif callback_data_message == 'sell' or callback_data_message =='buy':
         call=callback_data_message
-
-
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
             text=text_sell
         )
 
-        bot.edit_message_reply_markup(
-            chat_id=chat_id,
-            message_id=message_id,
-            reply_markup=sell_markup
-        )
+        if callback_data_message == 'sell':
+            bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=nazad_markup
+            )
+        else:
+            bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=sell_markup
+            )
+
+
+
+
+
+
+
         user_states[chat_id] = 'awaiting_photo'
 
     elif callback_data_message == 'sell_skip':
@@ -748,7 +817,7 @@ def process_callback_query(json_data):
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text=f"Текущая статистика:  📊 Общее количество пользователей канала: {member_count} 👥 Активные пользователи канала: {member_count} 🤖Всего пользователей в боте: {profile_count}"
+            text=f"Текущая статистика:\n\n📊 Общее количество пользователей канала: {member_count} \n👥 Активные пользователи канала: {member_count} \n🤖Всего пользователей в боте: {profile_count}"
         )
         bot.edit_message_reply_markup(
             chat_id=chat_id,
