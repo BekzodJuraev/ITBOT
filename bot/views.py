@@ -9,7 +9,7 @@ from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-4587708639
 main_id=-4563354620
-admin=1650034270
+admin=531080457
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 @csrf_exempt
@@ -329,7 +329,7 @@ def generate_category_keyboard(chat_id):
 
     # Add buttons for "Продолжить", "Искать", and "Назад"
     continue_key.extend([
-        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
+        [InlineKeyboardButton("Продолжить", callback_data='pc_search')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
         [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
     ])
