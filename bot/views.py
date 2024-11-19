@@ -17,6 +17,20 @@ bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 def webhook(request):
     if request.method == 'POST':
         json_data = json.loads(request.body.decode('utf-8'))
+
+        # Extract the user ID from the incoming message (if present)
+        user_id = None
+        if 'message' in json_data:
+            user_id = json_data['message']['from']['id']
+        elif 'callback_query' in json_data:
+            user_id = json_data['callback_query']['from']['id']
+
+        # Check if the user is in the blocked users list
+        if user_id and Telegram_users.objects.filter(user_id=user_id,block=True).exists():
+            # Optionally log or send a response to indicate user is blocked
+            return HttpResponse("User is blocked", status=200)  # Forbidden status
+
+        # Proceed with processing if user is not blocked
         if 'message' in json_data:
             process_message(json_data)
         elif 'callback_query' in json_data:
@@ -29,13 +43,19 @@ def webhook(request):
 
 admin_keyboard=[
                     [InlineKeyboardButton("🚀Рассылка", callback_data='admin_ads')],
-                    [InlineKeyboardButton("📊Статистика", callback_data='statics')]
+                    [InlineKeyboardButton("📊Статистика", callback_data='statics')],
+                    [InlineKeyboardButton("🚫Блокировка/разблокировка", callback_data='ban')]
                 ]
 admin_keyboard_markup = InlineKeyboardMarkup(admin_keyboard)
 admin_menu_text="👋Добро пожаловать в административную панель."
 
 statics_nazad = [[InlineKeyboardButton("🔙Назад", callback_data='statics_nazad')]]
 statics_nazad_markup = InlineKeyboardMarkup(statics_nazad)
+
+block_or_unblock = [[InlineKeyboardButton("🔙Меню", callback_data='statics_nazad')]]
+block_or_unblock_markup = InlineKeyboardMarkup(block_or_unblock)
+
+
 inline_keyboard = [
             [InlineKeyboardButton("💰 Продажа", callback_data='sell'),
              InlineKeyboardButton("🛒 Покупка", callback_data='buy')],
@@ -229,6 +249,35 @@ def process_message(json_data):
         approve_ads = [[InlineKeyboardButton("🔙Меню", callback_data='statics_nazad')]]
         approve_ads_markup = InlineKeyboardMarkup(approve_ads)
         bot.send_message(chat_id,text=f"✅ Рассылка успешно отправлена пользователям бота. Удалось отправить: {success_count} Не удалось отправить: {failure_count}",reply_markup=approve_ads_markup)
+        user_states.pop(chat_id)
+
+    elif user_states.get(chat_id) == 'awaiting_ban':
+        text=f"👤 Вы выбрали пользователя с ID: {message_text}. Выберите действие:"
+        try:
+            profile = Telegram_users.objects.filter(user_id=message_text).first()
+            if profile:
+                if profile.block == True:
+                    block = [[InlineKeyboardButton("🔓 Разблокировать", callback_data=f'unblock#{message_text}')],
+                             [InlineKeyboardButton("🔙Назад", callback_data='ban')]
+                             ]
+                    block_markup = InlineKeyboardMarkup(block)
+                    bot.send_message(chat_id=admin, text=text, reply_markup=block_markup)
+                elif profile.block == False:
+                    block = [[InlineKeyboardButton("❌ Заблокировать", callback_data=f'block#{message_text}')],
+                             [InlineKeyboardButton("🔙Назад", callback_data='ban')]
+                             ]
+                    block_markup = InlineKeyboardMarkup(block)
+                    bot.send_message(chat_id=admin, text=text, reply_markup=block_markup)
+            else:
+                bot.send_message(chat_id=admin, text="❌Этот пользователь ещё не запускал бота")
+
+        except Exception as e:
+            pass
+
+
+
+
+
         user_states.pop(chat_id)
 
 
@@ -431,6 +480,43 @@ def process_callback_query(json_data):
     #         message_id=query['message']['message_id'],
     #         reply_markup=pc_continue_markup
     #     )
+    elif callback_data_message.startswith('block'):
+        user=callback_data_message.split('#')[1]
+
+        profile=Telegram_users.objects.filter(user_id=user).first()
+        profile.block = True
+        profile.save()
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"🚫 Пользователь с ID: {user} заблокирован. Он больше не сможет использовать бота."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=block_or_unblock_markup
+        )
+    elif callback_data_message.startswith('unblock'):
+        user=callback_data_message.split('#')[1]
+
+        profile=Telegram_users.objects.filter(user_id=user).first()
+        profile.block = False
+        profile.save()
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=f"✅ Пользователь с ID: {user} успешно разблокирован. Теперь он снова имеет доступ к боту."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=block_or_unblock_markup
+        )
+
 
     elif callback_data_message == "category":
         text = "🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
@@ -848,6 +934,20 @@ def process_callback_query(json_data):
             reply_markup=statics_nazad_markup
         )
         user_states[chat_id] = 'awaiting_admin'
+
+    elif callback_data_message == 'ban':
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text='👤Введите id пользователя которого хотите заблокировать/разблокировать'
+        )
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=statics_nazad_markup
+        )
+        user_states[chat_id] = 'awaiting_ban'
+
 
 
 

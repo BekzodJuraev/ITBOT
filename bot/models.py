@@ -14,6 +14,9 @@ class Posts(models.Model):
 
 class Telegram_users(models.Model):
     user_id = models.BigIntegerField(unique=True,null=True, blank=True, default=None)
+    block=models.BooleanField(default=False)
+
+
 
 
 
