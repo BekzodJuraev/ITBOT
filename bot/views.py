@@ -202,25 +202,25 @@ def process_message(json_data):
                 [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
         approve_markup = InlineKeyboardMarkup(approve)
         city=message_text
-
+        user=Telegram_users.objects.filter(user_id=chat_id).first()
         text = (
-            f"Тип:#{'Продажа' if call == 'sell' else 'Покупка'}\n"
-            f"Категория: #{skip_catergory}\n"
-            f"Подкатегория: #{skip_pod_category}\n"
-            f"Подкатегория: #{skip_pod_pod_category}\n"
-            f"Пользователь: #{chat_name}\n"
-            f"Описание: {description}\n"
-            f"Контакты: {phone}\n"
-            f"Цена: {price}\n"
-            f"Город: #{city}\n"
-            f"Автор: @{chat_username}\n"
-            f"Айди: #{chat_id}\n"
-            f"Отправлено через: @ITbarakholka_bot"
+            f"*Тип:* \\#{'Продажа' if call == 'sell' else 'Покупка'}\n"
+            f"*Категория:* \\#{skip_catergory}\n"
+            f"*Подкатегория:* \\#{skip_pod_category}\n"
+            f"*Подкатегория:* \\#{skip_pod_pod_category}\n"
+            f"*Пользователь:* \\#user{user.id}\n"
+            f"*Описание:* {description}\n"
+            f"*Контакты:* {phone}\n"
+            f"*Цена:* {price}\n"
+            f"*Город:* \\#{city}\n"
+            f"*Автор:* @{chat_username}\n"
+            f"*Айди:* \\#{chat_id}\n"
+            f"*Отправлено через:* @ITbarakholka_bot"
         )
         if saved_photo:
-            bot.send_photo(chat_id,caption=text,photo=saved_photo,reply_markup=approve_markup)
+            bot.send_photo(chat_id,caption=text,photo=saved_photo,reply_markup=approve_markup,parse_mode='Markdown')
         else:
-            bot.send_message(chat_id,text=text,reply_markup=approve_markup)
+            bot.send_message(chat_id,text=text,reply_markup=approve_markup,parse_mode='MarkdownV2')
 
         saved_photo=None
 
@@ -339,8 +339,9 @@ def process_message(json_data):
             bot.send_message(chat_id, text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!", reply_markup=nazad_markup)
             user_states[chat_id] = 'awaiting_support_text'
         elif message_text == "📢 Купить рекламу":
-            statics_bot = Telegram_users.objects.all().count()
-            text = f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\nТекущая статистика:  \n📊 Общее количество пользователей: {statics_bot} \n👥 Активные пользователи: {statics_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+            statics_bot = Telegram_users.objects.filter(block=False).count()
+            statics_chanel=bot.get_chat_member_count(main_id)
+            text = f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\nТекущая статистика:  \n📊 Кол-во пользователей на канале: {statics_chanel} \n👥 Кол-во активных пользователей в боте: {statics_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
 
             bot.send_message(chat_id, text=text, reply_markup=nazad_markup)
             user_states[chat_id] = 'awaiting_ad_text'
@@ -411,6 +412,7 @@ def process_callback_query(json_data):
             chat_id=chat_id,
             message_id=message_id,
             reply_markup=nazad_markup
+
         )
 
         user_states[chat_id] = 'awaiting_ad_text'
@@ -784,13 +786,25 @@ def process_callback_query(json_data):
 
     elif callback_data_message.startswith("publish"):
         user_id = callback_data_message.split('#')[1]
+        if call == 'buy':
+            if 'photo' in query['message']:
+                sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
+                                              caption=query['message'].get('caption', ''))
+                text = query['message'].get('caption', '')
+            else:
+                sent_message = bot.send_message(main_id, text=query['message']['text'])
+                text = query['message']['text']
 
-        if 'photo' in query['message']:
-            sent_message=bot.send_photo(main_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''),reply_markup=bron_markup)
-            text=query['message'].get('caption', '')
         else:
-            sent_message=bot.send_message(main_id,text=query['message']['text'],reply_markup=bron_markup)
-            text=query['message']['text']
+            if 'photo' in query['message']:
+                sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
+                                              caption=query['message'].get('caption', ''), reply_markup=bron_markup)
+                text = query['message'].get('caption', '')
+            else:
+                sent_message = bot.send_message(main_id, text=query['message']['text'], reply_markup=bron_markup)
+                text = query['message']['text']
+
+
 
         lines=text.split("\n")
         category = None
@@ -898,12 +912,14 @@ def process_callback_query(json_data):
         except Exception as e:
             print(e)
     elif callback_data_message == 'statics':
-        member_count=bot.get_chat_member_count(chat_id)
+        #member_count=bot.get_chat_member_count(chat_id)
+
         profile_count=Telegram_users.objects.all().count()
+        profile_active=Telegram_users.objects.filter(block=False).count()
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text=f"Текущая статистика:\n\n📊 Общее количество пользователей канала: {member_count} \n👥 Активные пользователи канала: {member_count} \n🤖Всего пользователей в боте: {profile_count}"
+            text=f"Текущая статистика:\n\n📊 Общее количество пользователей в боте: {profile_count} \n👥 Активные пользователи в боте: {profile_active}"
         )
         bot.edit_message_reply_markup(
             chat_id=chat_id,
