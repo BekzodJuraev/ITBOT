@@ -9,7 +9,7 @@ from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-4587708639
 main_id=-4563354620
-admin=531080457
+admin=1650034270
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 @csrf_exempt
@@ -204,23 +204,24 @@ def process_message(json_data):
         city=message_text
         user=Telegram_users.objects.filter(user_id=chat_id).first()
         text = (
-            f"*Тип:* \\#{'Продажа' if call == 'sell' else 'Покупка'}\n"
-            f"*Категория:* \\#{skip_catergory}\n"
-            f"*Подкатегория:* \\#{skip_pod_category}\n"
-            f"*Подкатегория:* \\#{skip_pod_pod_category}\n"
-            f"*Пользователь:* \\#user{user.id}\n"
-            f"*Описание:* {description}\n"
-            f"*Контакты:* {phone}\n"
-            f"*Цена:* {price}\n"
-            f"*Город:* \\#{city}\n"
-            f"*Автор:* @{chat_username}\n"
-            f"*Айди:* \\#{chat_id}\n"
-            f"*Отправлено через:* @ITbarakholka_bot"
+            f"Тип:#{'Продажа' if call == 'sell' else 'Покупка'}\n"
+            f"Категория: #{skip_catergory}\n"
+            f"Подкатегория: #{skip_pod_category}\n"
+            f"Подкатегория: #{skip_pod_pod_category}\n"
+            f"Пользователь: #user{user.id}\n\n"
+            f"Описание: {description}\n"
+            f"Контакты: {phone}\n"
+            f"Цена: {price}\n"
+            f"Город: #{city}\n"
+            f"Автор: @{chat_username}\n"
+            f"Айди: #{chat_id}\n"
+            f"Отправлено через: @ITbarakholka_bot"
         )
+
         if saved_photo:
-            bot.send_photo(chat_id,caption=text,photo=saved_photo,reply_markup=approve_markup,parse_mode='Markdown')
+            bot.send_photo(chat_id,caption=text,photo=saved_photo,reply_markup=approve_markup)
         else:
-            bot.send_message(chat_id,text=text,reply_markup=approve_markup,parse_mode='MarkdownV2')
+            bot.send_message(chat_id,text=text,reply_markup=approve_markup)
 
         saved_photo=None
 
@@ -339,7 +340,8 @@ def process_message(json_data):
             bot.send_message(chat_id, text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!", reply_markup=nazad_markup)
             user_states[chat_id] = 'awaiting_support_text'
         elif message_text == "📢 Купить рекламу":
-            statics_bot = Telegram_users.objects.filter(block=False).count()
+            statics_bot = Telegram_users.objects.filter(block
+                                                        =False).count()
             statics_chanel=bot.get_chat_member_count(main_id)
             text = f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\nТекущая статистика:  \n📊 Кол-во пользователей на канале: {statics_chanel} \n👥 Кол-во активных пользователей в боте: {statics_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
 
