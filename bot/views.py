@@ -339,6 +339,7 @@ def process_message(json_data):
                     delete_post_markup = InlineKeyboardMarkup(delete_post)
                     bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id,
                                      reply_markup=delete_post_markup)
+                    bot.send_message(item.user_id,text=f'Ссылка на пост:https://t.me/mainbarxolka/{item.message_id}')
 
 
             except Exception as e:
@@ -894,16 +895,22 @@ def process_callback_query(json_data):
 
 
     elif callback_data_message.startswith('bron_reject'):
-        id_message = callback_data_message.split('#')[1]
-        id_user=callback_data_message.split('#')[2]
+        try:
+            id_message = callback_data_message.split('#')[1]
+            id_user = callback_data_message.split('#')[2]
 
-        bot.edit_message_reply_markup(
-            chat_id=main_id,
-            message_id=id_message,
-            reply_markup=bron_markup
-        )
-        bot.send_message(chat_id=id_user,text=f"🔓 Кнопка 📝Забронировать снова активирована для вашего объявления.")
+            bot.edit_message_reply_markup(
+                chat_id=main_id,
+                message_id=id_message,
+                reply_markup=bron_markup
+            )
+            bot.delete_message(chat_id=id_user, message_id=message_id)
+            bot.send_message(chat_id=id_user, text=f"🔓 Кнопка 📝Забронировать снова активирована для вашего объявления.")
+        except Exception as e:
+            print(e)
+
     elif callback_data_message == "reject":
+
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
 
@@ -914,6 +921,7 @@ def process_callback_query(json_data):
                 delete_post = [[InlineKeyboardButton("❌Удалить", callback_data=f'delete_posts#{item.message_id}')]]
                 delete_post_markup = InlineKeyboardMarkup(delete_post)
                 bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id, reply_markup=delete_post_markup)
+
 
 
 
