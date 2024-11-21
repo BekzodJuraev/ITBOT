@@ -8,12 +8,24 @@ from django.views.decorators.http import require_POST
 import re
 from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
-group_id=-4587708639
+group_id=-1002437770225
 main_id=-1002373097450
-#admin=1650034270
-admin=531080457
+admin=1650034270
+#admin=531080457
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
+
+
+def add_b_tags(text):
+    labels = [
+        "Тип", "Категория", "Подкатегория", "Пользователь", "Описание",
+        "Контакты", "Цена", "Город", "Автор", "Отправлено через"
+    ]
+
+    for label in labels:
+        text = text.replace(f"{label}:", f"<b>{label}:</b>")
+
+    return text
 @csrf_exempt
 @require_POST
 def webhook(request):
@@ -207,25 +219,24 @@ def process_message(json_data):
         city=message_text
         user=Telegram_users.objects.filter(user_id=chat_id).first()
         text = (
-            f"Тип:#{'Продажа' if call == 'sell' else 'Покупка'}\n"
+            f"Тип: #{'Продажа' if call == 'sell' else 'Покупка'}\n\n"
             f"Категория: #{skip_catergory}\n"
             f"Подкатегория: #{skip_pod_category}\n"
             f"Подкатегория: #{skip_pod_pod_category}\n"
             f"Пользователь: #user{user.id}\n\n"
-            f"Описание: {description}\n"
+            f"Описание: {description}\n\n"
             f"Контакты: {phone}\n"
             f"Цена: {price}\n"
             f"Город: #{city}\n"
-            f"Автор: @{chat_username}\n"
-            f"Айди: #{chat_id}\n"
+            f"Автор: @{chat_username}\n\n"
             f"Отправлено через: @ITbarakholka_bot"
-
         )
 
         if saved_photo:
-            bot.send_photo(chat_id,caption=text,photo=saved_photo,reply_markup=approve_markup)
+            bot.send_photo(chat_id,caption=add_b_tags(text),photo=saved_photo,reply_markup=approve_markup,parse_mode='HTML')
         else:
-            bot.send_message(chat_id,text=text,reply_markup=approve_markup)
+            text=bot.send_message(chat_id,text=add_b_tags(text),reply_markup=approve_markup,parse_mode='HTML')
+
 
         saved_photo=None
 
@@ -354,6 +365,10 @@ def process_message(json_data):
 
 
 
+        elif message_text == 'test':
+            test=bot.send_message(chat_id,text="<b>good</b>",parse_mode="HTML")
+
+            bot.send_message(chat_id,text=test.text,parse_mode="HTML")
 
         elif message_text == '/admin':
             if chat_id == admin:
@@ -768,7 +783,7 @@ def process_callback_query(json_data):
                    [InlineKeyboardButton("❌Отклонить", callback_data='reject')]]
         approve_admin_markup = InlineKeyboardMarkup(approve_admin)
         if 'photo' in query['message']:
-            bot.send_photo(group_id,photo=query['message']['photo'][0]['file_id'],caption=query['message'].get('caption', ''),reply_markup=approve_admin_markup)
+            bot.send_photo(group_id,photo=query['message']['photo'][0]['file_id'],caption=add_b_tags(query['message'].get('caption', '')),reply_markup=approve_admin_markup,parse_mode='HTML')
             bot.edit_message_caption(
                 chat_id=chat_id,
                 message_id=message_id,
@@ -780,7 +795,8 @@ def process_callback_query(json_data):
                 reply_markup=nazad_markup
             )
         else:
-            bot.send_message(group_id,text=query['message']['text'],reply_markup=approve_admin_markup)
+            bot.send_message(group_id,text=add_b_tags(query['message']['text']),reply_markup=approve_admin_markup,parse_mode='HTML')
+
             bot.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,
@@ -796,24 +812,26 @@ def process_callback_query(json_data):
 
 
 
+
+
     elif callback_data_message.startswith("publish"):
         user_id = callback_data_message.split('#')[1]
         if call == 'buy':
             if 'photo' in query['message']:
                 sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
-                                              caption=query['message'].get('caption', ''))
+                                              caption=add_b_tags(query['message'].get('caption', '')),parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
-                sent_message = bot.send_message(main_id, text=query['message']['text'])
+                sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']),parse_mode='HTML')
                 text = query['message']['text']
 
         else:
             if 'photo' in query['message']:
                 sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
-                                              caption=query['message'].get('caption', ''), reply_markup=bron_markup)
+                                              caption=add_b_tags(query['message'].get('caption', '')), reply_markup=bron_markup,parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
-                sent_message = bot.send_message(main_id, text=query['message']['text'], reply_markup=bron_markup)
+                sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']), reply_markup=bron_markup,parse_mode='HTML')
                 text = query['message']['text']
 
 
@@ -896,6 +914,8 @@ def process_callback_query(json_data):
                 delete_post = [[InlineKeyboardButton("❌Удалить", callback_data=f'delete_posts#{item.message_id}')]]
                 delete_post_markup = InlineKeyboardMarkup(delete_post)
                 bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id, reply_markup=delete_post_markup)
+
+
 
 
         except Exception as e:
