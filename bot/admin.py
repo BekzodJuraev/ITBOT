@@ -6,4 +6,4 @@ class Post(admin.ModelAdmin):
     readonly_fields = ['user_id','message_id']
 @admin.register(Telegram_users)
 class Post(admin.ModelAdmin):
-    list_display = ['user_id']
+    list_display = ['user_id','created_at']

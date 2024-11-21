@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from datetime import date
 from django.shortcuts import render
 import json
 import telegram
@@ -8,8 +9,9 @@ import re
 from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-4587708639
-main_id=-4563354620
-admin=1650034270
+main_id=-1002373097450
+#admin=1650034270
+admin=531080457
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 @csrf_exempt
@@ -165,6 +167,7 @@ def process_message(json_data):
     elif user_states.get(chat_id) == 'awaiting_support_text':
 
         support = f"Пользователь @{chat_username} id:{chat_id} написал: {message_text}"
+        bot.send_message(chat_id,text='📩Ваше сообщение отправлено, ждите ответ.')
 
         bot.send_message(group_id, text=support)
 
@@ -216,6 +219,7 @@ def process_message(json_data):
             f"Автор: @{chat_username}\n"
             f"Айди: #{chat_id}\n"
             f"Отправлено через: @ITbarakholka_bot"
+
         )
 
         if saved_photo:
@@ -354,6 +358,12 @@ def process_message(json_data):
         elif message_text == '/admin':
             if chat_id == admin:
                 bot.send_message(chat_id,text=admin_menu_text,reply_markup=admin_keyboard_markup)
+        elif message_text == '/users':
+            if chat_id == admin:
+                today=Telegram_users.objects.filter(created_at__date=date.today()).count()
+                all_users=Telegram_users.objects.all().count()
+                bot.send_message(chat_id, text=f'Всего пользователей в боте: {all_users} \nНовых пользователей за сутки: {today}')
+
 user_selected_category = {}
 def generate_category_keyboard(chat_id):
     categories = [
@@ -857,7 +867,8 @@ def process_callback_query(json_data):
             mention_text = f"[{name}](tg://user?id={user})"
             notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'bron_reject#{message_id}#{user}')]]
             notify_rejecet_markup = InlineKeyboardMarkup(notify_rejecet)
-            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем {mention_text}. Свяжитесь с ним для уточнения деталей.",reply_markup=notify_rejecet_markup,parse_mode="Markdown")
+
+            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем {mention_text}. Свяжитесь с ним для уточнения деталей.\n\n  Ссылка на пост:https://t.me/mainbarxolka/{message_id}",reply_markup=notify_rejecet_markup,parse_mode="Markdown")
 
 
 
