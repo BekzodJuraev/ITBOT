@@ -62,6 +62,13 @@ admin_keyboard=[
                     [InlineKeyboardButton("🚫Блокировка/разблокировка", callback_data='ban')]
                 ]
 admin_keyboard_markup = InlineKeyboardMarkup(admin_keyboard)
+top_category=[
+                    [InlineKeyboardButton("💰 Продажа", callback_data='category_sell')],
+                    [InlineKeyboardButton("🛒 Покупка", callback_data='category_buy')],
+                    [InlineKeyboardButton("Все", callback_data='category')],
+                    [InlineKeyboardButton("🔙Назад", callback_data='nazad')]
+                ]
+top_category_markup = InlineKeyboardMarkup(top_category)
 admin_menu_text="👋Добро пожаловать в административную панель."
 
 statics_nazad = [[InlineKeyboardButton("🔙Назад", callback_data='statics_nazad')]]
@@ -349,10 +356,10 @@ def process_message(json_data):
             # Handle posts action
 
         elif message_text == "🔍 Поиск по категориям":
-            text = "🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
-            continue_markup = generate_category_keyboard(chat_id)
+            text = "🔍 Выберите категорию для поиска объявлений"
+            #continue_markup = generate_category_keyboard(chat_id)
 
-            bot.send_message(chat_id, text=text, reply_markup=continue_markup)
+            bot.send_message(chat_id, text=text, reply_markup=top_category_markup)
         elif message_text == "🛠️ Поддержка":
 
             bot.send_message(chat_id, text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!", reply_markup=nazad_markup)
@@ -381,6 +388,7 @@ def process_message(json_data):
 
 user_selected_category = {}
 def generate_category_keyboard(chat_id):
+    global user_selected_category
     categories = [
         ("ПК", 'pc'),
         ("Товары для компьютера", 'pc_comp'),
@@ -406,6 +414,42 @@ def generate_category_keyboard(chat_id):
 
     # Add buttons for "Продолжить", "Искать", and "Назад"
     continue_key.extend([
+        [InlineKeyboardButton("Все", callback_data='pc_all')],
+        [InlineKeyboardButton("Продолжить", callback_data='pc_search')],
+        [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
+        [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
+    ])
+
+    return InlineKeyboardMarkup(continue_key)
+
+def generate_category_keyboard_all(chat_id):
+    global user_selected_category
+    categories = [
+        ("ПК", 'pc'),
+        ("Товары для компьютера", 'pc_comp'),
+        ("Комплектующие для компьютера", 'pc_comp1'),
+        ("Серверное оборудование", 'pc_server'),
+        ("Сетевое оборудование", 'pc_network'),
+        ("Офисная техника и расходники", 'pc_office'),
+        ("Телефоны", 'pc_phone'),
+        ("Программное обеспечение", 'pf_software'),
+    ]
+
+    continue_key = []
+    selected_category=[]
+
+    for category_name, callback_value in categories:
+        category_button = InlineKeyboardButton(f"✅ {category_name}", callback_data=callback_value)
+        continue_key.append([category_button])
+        selected_category.append(callback_value)
+
+
+    user_selected_category[chat_id] = [selected_category]
+    print(user_selected_category)
+
+    # Add buttons for "Продолжить", "Искать", and "Назад"
+    continue_key.extend([
+        [InlineKeyboardButton("Все", callback_data='pc_all')],
         [InlineKeyboardButton("Продолжить", callback_data='pc_search')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
         [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
@@ -591,7 +635,19 @@ def process_callback_query(json_data):
         )
 
 
-
+    elif callback_data_message == 'pc_all':
+        text = "🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
+        continue_markup = generate_category_keyboard_all(chat_id)
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text
+        )
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=continue_markup
+        )
     elif callback_data_message == "pc_search":
         try:
             search = user_selected_category.get(chat_id)
