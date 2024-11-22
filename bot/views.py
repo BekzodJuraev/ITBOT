@@ -10,7 +10,8 @@ from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-1002437770225
 main_id=-1002373097450
-admin=1650034270
+admin=202053300
+#admin=1650034270
 #admin=531080457
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
@@ -19,7 +20,7 @@ bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 def add_b_tags(text):
     labels = [
         "Тип", "Категория", "Подкатегория", "Пользователь", "Описание",
-        "Контакты", "Цена", "Город", "Автор", "Отправлено через"
+        "Контакты", "Цена", "Город", "Автор", "Отправлено через",'Айди'
     ]
 
     for label in labels:
@@ -223,7 +224,8 @@ def process_message(json_data):
             f"Категория: #{skip_catergory}\n"
             f"Подкатегория: #{skip_pod_category}\n"
             f"Подкатегория: #{skip_pod_pod_category}\n"
-            f"Пользователь: #user{user.id}\n\n"
+            f"Пользователь: #user{user.id}\n"
+            f"Айди: {chat_id}\n\n"
             f"Описание: {description}\n\n"
             f"Контакты: {phone}\n"
             f"Цена: {price}\n"
@@ -366,13 +368,10 @@ def process_message(json_data):
 
 
 
-        elif message_text == 'test':
-            test=bot.send_message(chat_id,text="<b>good</b>",parse_mode="HTML")
 
-            bot.send_message(chat_id,text=test.text,parse_mode="HTML")
 
         elif message_text == '/admin':
-            if chat_id == admin:
+            if chat_id == admin or chat_id == 531080457:
                 bot.send_message(chat_id,text=admin_menu_text,reply_markup=admin_keyboard_markup)
         elif message_text == '/users':
             if chat_id == admin:
@@ -429,10 +428,11 @@ def process_callback_query(json_data):
 
     if callback_data_message == "ads":
         statics_bot=Telegram_users.objects.all().count()
+        active_bot=Telegram_users.objects.filter(block=False).count()
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text=f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\n\nТекущая статистика:  📊 Общее количество пользователей: \n{statics_bot} \n👥 Активные пользователи: {statics_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+            text=f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\n\nТекущая статистика:  📊 Общее количество пользователей: \n{statics_bot} \n👥 Активные пользователи: {active_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
 
         )
 
@@ -866,7 +866,7 @@ def process_callback_query(json_data):
         Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod)
 
 
-        bot.send_message(user_id,text='🎉Ваш пост был успешно одобрен администратором и опубликован на канале!')
+        bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}')
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
     elif callback_data_message == 'bron':
