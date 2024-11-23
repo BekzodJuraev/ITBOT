@@ -702,8 +702,8 @@ def process_callback_query(json_data):
         if chat_id in user_selected_category_go:
             user_selected_category_go.pop(chat_id)
             continue_button = [[InlineKeyboardButton("test", callback_data='pc_test')],
-                               [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
                                [InlineKeyboardButton("Все", callback_data='pc_test')],
+                               [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
                                [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
                                [InlineKeyboardButton("🔙Назад", callback_data='category')]]
             continue_markup = InlineKeyboardMarkup(continue_button)
@@ -772,7 +772,9 @@ def process_callback_query(json_data):
                                          text='Показаны посты, подходящих под выбранные категории. Чтобы увидеть больше, нажмите кнопку «⬇️Показать ещё».',
                                          reply_markup=continue_button_markup)
                         message_count = 0
+
                         break
+
 
             else:
                 pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
@@ -944,7 +946,7 @@ def process_callback_query(json_data):
     elif callback_data_message.startswith("approve"):
         user_id=callback_data_message.split('#')[1]
         approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}')],
-                   [InlineKeyboardButton("❌Отклонить", callback_data='reject')]]
+                   [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}')]]
         approve_admin_markup = InlineKeyboardMarkup(approve_admin)
         if 'photo' in query['message']:
             bot.send_photo(group_id,photo=query['message']['photo'][0]['file_id'],caption=add_b_tags(query['message'].get('caption', '')),reply_markup=approve_admin_markup,parse_mode='HTML')
@@ -1075,8 +1077,10 @@ def process_callback_query(json_data):
         except Exception as e:
             print(e)
 
-    elif callback_data_message == "reject":
-
+    elif callback_data_message.startswith('reject'):
+        user_id = callback_data_message.split('#')[1]
+        bot.send_message(chat_id=user_id,text='❌Ваш пост был отклонен администрацией.')
+        bot.copy_message(chat_id=user_id,from_chat_id=group_id,message_id=message_id)
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
 
