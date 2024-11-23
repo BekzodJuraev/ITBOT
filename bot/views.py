@@ -10,8 +10,8 @@ from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
 group_id=-1002437770225
 main_id=-1002373097450
-admin=202053300
-#admin=1650034270
+#admin=202053300
+admin=1650034270
 #admin=531080457
 user_states = {}
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
@@ -269,6 +269,8 @@ def process_message(json_data):
                 success_count += 1
             except Exception as e:
                 failure_count += 1
+                item.active=True
+                item.save()
                 print(f"Failed to send to {item.user_id}: {e}")
 
         approve_ads = [[InlineKeyboardButton("🔙Меню", callback_data='statics_nazad')]]
@@ -1126,7 +1128,9 @@ def process_callback_query(json_data):
         #member_count=bot.get_chat_member_count(chat_id)
 
         profile_count=Telegram_users.objects.all().count()
-        profile_active=Telegram_users.objects.filter(block=False).count()
+        profile_active=Telegram_users.objects.filter(active=False).count()
+
+
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
