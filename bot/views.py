@@ -387,6 +387,7 @@ def process_message(json_data):
                 bot.send_message(chat_id, text=f'Всего пользователей в боте: {all_users} \nНовых пользователей за сутки: {today}')
 
 user_selected_category = {}
+user_selected_category_go = {}
 def generate_category_keyboard(chat_id):
     global user_selected_category
     categories = [
@@ -403,6 +404,7 @@ def generate_category_keyboard(chat_id):
     continue_key = []
 
 
+
     for category_name, callback_value in categories:
         # If the category is selected, add a ✅ next to it
         if chat_id in user_selected_category and callback_value in user_selected_category.get(chat_id):
@@ -415,7 +417,7 @@ def generate_category_keyboard(chat_id):
     # Add buttons for "Продолжить", "Искать", and "Назад"
     continue_key.extend([
         [InlineKeyboardButton("Все", callback_data='pc_all')],
-        [InlineKeyboardButton("Продолжить", callback_data='pc_search')],
+        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_go')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
         [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
     ])
@@ -436,21 +438,27 @@ def generate_category_keyboard_all(chat_id):
     ]
 
     continue_key = []
-    selected_category=[]
+
 
     for category_name, callback_value in categories:
         category_button = InlineKeyboardButton(f"✅ {category_name}", callback_data=callback_value)
         continue_key.append([category_button])
-        selected_category.append(callback_value)
+
+        if chat_id not in user_selected_category:
+            user_selected_category[chat_id] = [callback_value]
+
+        else:
+            user_selected_category[chat_id].append(callback_value)
 
 
-    user_selected_category[chat_id] = [selected_category]
-    print(user_selected_category)
+
+    #user_selected_category[chat_id] = [selected_category]
+
 
     # Add buttons for "Продолжить", "Искать", and "Назад"
     continue_key.extend([
         [InlineKeyboardButton("Все", callback_data='pc_all')],
-        [InlineKeyboardButton("Продолжить", callback_data='pc_search')],
+        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_go')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
         [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
     ])
@@ -459,7 +467,7 @@ def generate_category_keyboard_all(chat_id):
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category,call
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
 
@@ -610,14 +618,20 @@ def process_callback_query(json_data):
         )
     elif callback_data_message in ['pc', 'pc_comp', 'pc_comp1', 'pc_network', 'pc_office', 'pc_phone', 'pf_software','pc_server']:
         selected_category=callback_data_message
+
         if chat_id in user_selected_category and selected_category in user_selected_category.get(chat_id):
             user_selected_category[chat_id].remove(selected_category)
+
 
         else:
             if chat_id not in user_selected_category:
                 user_selected_category[chat_id]=[selected_category]
+
             else:
                 user_selected_category[chat_id].append(selected_category)
+
+
+
 
 
 
@@ -633,6 +647,55 @@ def process_callback_query(json_data):
         message_id = message_id,
         reply_markup = continue_markup
         )
+
+    elif callback_data_message == 'pc_go':
+        continue_button = [[InlineKeyboardButton("test", callback_data='pc_test')],
+                           [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
+                           [InlineKeyboardButton("Все", callback_data='pc_test')],
+                           [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+                           [InlineKeyboardButton("🔙Назад", callback_data='category')]]
+        continue_markup = InlineKeyboardMarkup(continue_button)
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text='🔽 Выберите подкатегорию, отмечая её галочкой ✅. Или же, можете пропустить этот шаг и просто нажать «➡️Продолжить» .'
+        )
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=continue_markup
+        )
+    elif callback_data_message == 'pc_test':
+        if chat_id in user_selected_category_go:
+            user_selected_category_go.pop(chat_id)
+            continue_button = [[InlineKeyboardButton("test", callback_data='pc_test')],
+                               [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
+                               [InlineKeyboardButton("Все", callback_data='pc_test')],
+                               [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+                               [InlineKeyboardButton("🔙Назад", callback_data='category')]]
+            continue_markup = InlineKeyboardMarkup(continue_button)
+
+        else:
+            user_selected_category_go[chat_id] = callback_data_message
+            continue_button = [[InlineKeyboardButton("✅ test", callback_data='pc_test')],
+                               [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
+                               [InlineKeyboardButton("Все", callback_data='pc_test')],
+                               [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+                               [InlineKeyboardButton("🔙Назад", callback_data='category')]]
+            continue_markup = InlineKeyboardMarkup(continue_button)
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text='🔽 Выберите подкатегорию, отмечая её галочкой ✅. Или же, можете пропустить этот шаг и просто нажать «➡️Продолжить» .'
+        )
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=continue_markup
+        )
+
 
 
     elif callback_data_message == 'pc_all':
@@ -658,7 +721,7 @@ def process_callback_query(json_data):
                 for item in posts:
                     bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
                     message_count += 1
-                    if message_count == 1:
+                    if message_count == 5:
                         continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='more')],
                                            [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
                         continue_button_markup = InlineKeyboardMarkup(continue_button)
@@ -666,6 +729,7 @@ def process_callback_query(json_data):
                                          text='Показаны посты, подходящих под выбранные категории. Чтобы увидеть больше, нажмите кнопку «⬇️Показать ещё».',
                                          reply_markup=continue_button_markup)
                         message_count = 0
+                        break
 
             else:
                 pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
@@ -896,8 +960,11 @@ def process_callback_query(json_data):
         lines=text.split("\n")
         category = None
         pod = None
+        type=None
 
         for line in lines:
+            if line.startswith("Тип:"):
+                type=line.split(": #")[1]
             if line.startswith("Категория:"):
                 category = line.split(": #")[1]
                 if category.startswith('ПК'):
@@ -919,7 +986,7 @@ def process_callback_query(json_data):
 
 
 
-        Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod)
+        Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod,type=type)
 
 
         bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}')
