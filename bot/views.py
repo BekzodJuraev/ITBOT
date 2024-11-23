@@ -745,8 +745,19 @@ def process_callback_query(json_data):
         )
     elif callback_data_message == "pc_search":
         try:
+            mode=None
+            if user_selected_mode[chat_id] == 'sell':
+                mode="Продажа"
+            elif user_selected_mode[chat_id] == 'buy':
+                mode="Покупка"
             search = user_selected_category.get(chat_id)
-            posts = Posts.objects.filter(category__in=search)
+            if mode:
+                posts = Posts.objects.filter(category__in=search,type=mode)
+            else:
+                posts = Posts.objects.filter(category__in=search)
+
+
+
             message_count = 0
 
             if posts:
