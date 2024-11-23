@@ -63,9 +63,9 @@ admin_keyboard=[
                 ]
 admin_keyboard_markup = InlineKeyboardMarkup(admin_keyboard)
 top_category=[
-                    [InlineKeyboardButton("💰 Продажа", callback_data='category_sell')],
-                    [InlineKeyboardButton("🛒 Покупка", callback_data='category_buy')],
-                    [InlineKeyboardButton("Все", callback_data='category')],
+                    [InlineKeyboardButton("💰 Продажа", callback_data='category#sell')],
+                    [InlineKeyboardButton("🛒 Покупка", callback_data='category#buy')],
+                    [InlineKeyboardButton("Все", callback_data='category#all')],
                     [InlineKeyboardButton("🔙Назад", callback_data='nazad')]
                 ]
 top_category_markup = InlineKeyboardMarkup(top_category)
@@ -78,15 +78,15 @@ block_or_unblock = [[InlineKeyboardButton("🔙Меню", callback_data='statics
 block_or_unblock_markup = InlineKeyboardMarkup(block_or_unblock)
 
 
-inline_keyboard = [
-            [InlineKeyboardButton("💰 Продажа", callback_data='sell'),
-             InlineKeyboardButton("🛒 Покупка", callback_data='buy')],
-            [InlineKeyboardButton("📋 Мои объявления", callback_data='posts')],
-            [InlineKeyboardButton("🔍 Поиск по категориям", callback_data='category')],
-            [InlineKeyboardButton("🛠️ Поддержка", callback_data='support')],
-            [InlineKeyboardButton("📢 Купить рекламу", callback_data='ads')],
-        ]
-inline_markup = InlineKeyboardMarkup(inline_keyboard)
+# inline_keyboard = [
+#             [InlineKeyboardButton("💰 Продажа", callback_data='sell'),
+#              InlineKeyboardButton("🛒 Покупка", callback_data='buy')],
+#             [InlineKeyboardButton("📋 Мои объявления", callback_data='posts')],
+#             [InlineKeyboardButton("🔍 Поиск по категориям", callback_data='category')],
+#             [InlineKeyboardButton("🛠️ Поддержка", callback_data='support')],
+#             [InlineKeyboardButton("📢 Купить рекламу", callback_data='ads')],
+#         ]
+# inline_markup = InlineKeyboardMarkup(inline_keyboard)
 reply_keyboard = [
     [KeyboardButton("💰 Продажа"), KeyboardButton("🛒 Покупка")],
     [KeyboardButton("📋 Мои объявления")],
@@ -388,6 +388,7 @@ def process_message(json_data):
 
 user_selected_category = {}
 user_selected_category_go = {}
+user_selected_mode={}
 def generate_category_keyboard(chat_id):
     global user_selected_category
     categories = [
@@ -419,13 +420,14 @@ def generate_category_keyboard(chat_id):
         [InlineKeyboardButton("Все", callback_data='pc_all')],
         [InlineKeyboardButton("➡️Продолжить", callback_data='pc_go')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
-        [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
+        [InlineKeyboardButton("🔙Назад", callback_data='back_top')],
     ])
+
 
     return InlineKeyboardMarkup(continue_key)
 
 def generate_category_keyboard_all(chat_id):
-    global user_selected_category
+    global user_selected_category,user_selected_mode
     categories = [
         ("ПК", 'pc'),
         ("Товары для компьютера", 'pc_comp'),
@@ -460,14 +462,14 @@ def generate_category_keyboard_all(chat_id):
         [InlineKeyboardButton("Все", callback_data='pc_all')],
         [InlineKeyboardButton("➡️Продолжить", callback_data='pc_go')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')], #pc_search
-        [InlineKeyboardButton("🔙Назад", callback_data='nazad')],
+        [InlineKeyboardButton("🔙Назад", callback_data=f'back_top')],
     ])
 
     return InlineKeyboardMarkup(continue_key)
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
 
@@ -520,6 +522,24 @@ def process_callback_query(json_data):
             print(e)
         bot.delete_message(chat_id,message_id=message_id)
         bot.send_message(chat_id,text="Меню")
+    elif callback_data_message == 'back_top':
+        try:
+            user_selected_mode.pop(chat_id)
+        except:
+            pass
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍 Выберите категорию для поиска объявлений"
+
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=top_category_markup
+        )
 
 
 
@@ -600,8 +620,14 @@ def process_callback_query(json_data):
         )
 
 
-    elif callback_data_message == "category":
+    elif callback_data_message.startswith('category'):
         text = "🔍 Выберите категорию для поиска объявлений. Вы можете отметить несколько вариантов, отметив их кнопкой ✅   Чтобы перейти дальше, нажмите «➡️Продолжить»."
+        try:
+            user_selected_mode[chat_id] = callback_data_message.split("#")[1]
+
+        except:
+            pass
+
         continue_markup = generate_category_keyboard(chat_id)
 
         # Edit the message with updated text and keyboard
@@ -616,6 +642,12 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=continue_markup
         )
+
+
+
+
+
+
     elif callback_data_message in ['pc', 'pc_comp', 'pc_comp1', 'pc_network', 'pc_office', 'pc_phone', 'pf_software','pc_server']:
         selected_category=callback_data_message
 
