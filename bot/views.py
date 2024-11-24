@@ -350,7 +350,7 @@ def process_message(json_data):
                     delete_post_markup = InlineKeyboardMarkup(delete_post)
                     bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id,
                                      reply_markup=delete_post_markup)
-                    bot.send_message(item.user_id,text=f'Ссылка на пост:https://t.me/mainbarxolka/{item.message_id}')
+                    bot.send_message(item.user_id,text=f'Ссылка на пост:https://t.me/mainbarxolka/{item.message_id}',disable_web_page_preview=True)
 
 
             except Exception as e:
@@ -684,8 +684,8 @@ def process_callback_query(json_data):
 
     elif callback_data_message == 'pc_go':
         continue_button = [[InlineKeyboardButton("test", callback_data='pc_test')],
-                           [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
                            [InlineKeyboardButton("Все", callback_data='pc_test')],
+                           [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
                            [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
                            [InlineKeyboardButton("🔙Назад", callback_data='category')]]
         continue_markup = InlineKeyboardMarkup(continue_button)
@@ -713,8 +713,8 @@ def process_callback_query(json_data):
         else:
             user_selected_category_go[chat_id] = callback_data_message
             continue_button = [[InlineKeyboardButton("✅ test", callback_data='pc_test')],
-                               [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
                                [InlineKeyboardButton("Все", callback_data='pc_test')],
+                               [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
                                [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
                                [InlineKeyboardButton("🔙Назад", callback_data='category')]]
             continue_markup = InlineKeyboardMarkup(continue_button)
@@ -765,6 +765,12 @@ def process_callback_query(json_data):
             if posts:
                 for item in posts:
                     bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
+                    bot.send_message(
+                        chat_id,
+                        text=f"Ссылка на пост: https://t.me/mainbarxolka/{item.message_id}",
+                        disable_web_page_preview=True
+                    )
+
                     message_count += 1
                     if message_count == 5:
                         continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='more')],
@@ -1036,7 +1042,7 @@ def process_callback_query(json_data):
         Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod,type=type)
 
 
-        bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}')
+        bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}',disable_web_page_preview=True)
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
     elif callback_data_message == 'bron':
@@ -1057,7 +1063,7 @@ def process_callback_query(json_data):
             notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'bron_reject#{message_id}#{user}')]]
             notify_rejecet_markup = InlineKeyboardMarkup(notify_rejecet)
 
-            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем {mention_text}. Свяжитесь с ним для уточнения деталей.\n\n  Ссылка на пост:https://t.me/mainbarxolka/{message_id}",reply_markup=notify_rejecet_markup,parse_mode="Markdown")
+            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем {mention_text}. Свяжитесь с ним для уточнения деталей.\n\n  Ссылка на пост:https://t.me/mainbarxolka/{message_id}",reply_markup=notify_rejecet_markup,parse_mode="Markdown",disable_web_page_preview=True)
 
 
 
