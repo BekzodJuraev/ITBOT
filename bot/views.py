@@ -271,7 +271,7 @@ def process_message(json_data):
                 failure_count += 1
                 item.active=True
                 item.save()
-                print(f"Failed to send to {item.user_id}: {e}")
+                #print(f"Failed to send to {item.user_id}: {e}")
 
         approve_ads = [[InlineKeyboardButton("🔙Меню", callback_data='statics_nazad')]]
         approve_ads_markup = InlineKeyboardMarkup(approve_ads)
@@ -325,7 +325,8 @@ def process_message(json_data):
             try:
                 Telegram_users.objects.create(user_id=chat_id)
             except Exception as e:
-                print(e)
+                pass
+                #print(e)
 
             text = (f"✨ Привет! Этот бот создан для удобной и быстрой публикации "
                     f"объявлений на канале @ITbarakholka. 🚀 Рад приветствовать тебя, @{chat_username}!")
@@ -354,7 +355,7 @@ def process_message(json_data):
 
 
             except Exception as e:
-                print(e)
+                #print(e)
             # Handle posts action
 
         elif message_text == "🔍 Поиск по категориям":
@@ -521,7 +522,7 @@ def process_callback_query(json_data):
         try:
             user_states.pop(chat_id)
         except Exception as e:
-            print(e)
+            #print(e)
         bot.delete_message(chat_id,message_id=message_id)
         bot.send_message(chat_id,text="Меню")
     elif callback_data_message == 'back_top':
@@ -799,7 +800,8 @@ def process_callback_query(json_data):
                 )
             user_selected_category.pop(chat_id)
         except Exception as e:
-            print(e)
+            pass
+            #print(e)
 
 
 
@@ -1083,7 +1085,8 @@ def process_callback_query(json_data):
             bot.delete_message(chat_id=id_user, message_id=message_id)
             bot.send_message(chat_id=id_user, text=f"🔓 Кнопка 📝Забронировать снова активирована для вашего объявления.")
         except Exception as e:
-            print(e)
+            pass
+            #print(e)
 
     elif callback_data_message.startswith('reject'):
         user_id = callback_data_message.split('#')[1]
@@ -1105,7 +1108,7 @@ def process_callback_query(json_data):
 
 
         except Exception as e:
-            print(e)
+            #print(e)
 
 
     elif callback_data_message.startswith('delete_posts'):
@@ -1129,7 +1132,8 @@ def process_callback_query(json_data):
             Posts.objects.filter(message_id=delete_message).delete()
 
         except Exception as e:
-            print(e)
+            pass
+            #print(e)
     elif callback_data_message == 'statics':
         #member_count=bot.get_chat_member_count(chat_id)
 
