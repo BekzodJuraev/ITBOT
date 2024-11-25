@@ -2,7 +2,7 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 import logging
 
-ngrok_url = 'https://188.120.236.240:8000/telegram_webhook/'
+ngrok_url = 'https://5fa0-5-133-120-92.ngrok-free.app/telegram_webhook/'
 
 
 bot = Bot(token="7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
@@ -18,6 +18,7 @@ async def set_webhook(dispatcher):
     try:
         webhook_url = f"{ngrok_url}"
         await bot.set_webhook(webhook_url)
+        print("Hello")
         logging.info(f"Webhook set to {webhook_url}")
     except Exception as e:
         logging.error(f"Failed to set webhook: {e}")
