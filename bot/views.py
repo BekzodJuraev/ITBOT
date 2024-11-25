@@ -355,6 +355,7 @@ def process_message(json_data):
 
 
             except Exception as e:
+                pass
                 #print(e)
             # Handle posts action
 
@@ -522,6 +523,7 @@ def process_callback_query(json_data):
         try:
             user_states.pop(chat_id)
         except Exception as e:
+            pass
             #print(e)
         bot.delete_message(chat_id,message_id=message_id)
         bot.send_message(chat_id,text="Меню")
@@ -1108,6 +1110,7 @@ def process_callback_query(json_data):
 
 
         except Exception as e:
+            pass
             #print(e)
 
 
