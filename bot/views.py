@@ -274,19 +274,25 @@ def process_message(json_data):
                                      parse_mode='HTML')
             else:
                 media_group = [
-                    InputMediaPhoto(media=file_id, caption=add_b_tags(text) if i == 0 else None, parse_mode='HTML')
-                    for i, file_id in enumerate(saved_photo)
+                    InputMediaPhoto(media=file_id) for file_id in saved_photo
                 ]
                 bot.send_media_group(
                     chat_id=chat_id,
                     media=media_group,
                 )
+
+
+
+                approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}')],
+                           [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
+                approve_markup = InlineKeyboardMarkup(approve)
                 # bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo, reply_markup=approve_markup,
                 #                      parse_mode='HTML')
                 bot.send_message(
                     chat_id=chat_id,
-                    text="Choose",
-                    reply_markup=approve_markup  # Your inline keyboard here
+                    text=add_b_tags(text),
+                    reply_markup=approve_markup,
+                    parse_mode='HTML'# Your inline keyboard here
                 )
 
 
@@ -295,7 +301,7 @@ def process_message(json_data):
             text=bot.send_message(chat_id,text=add_b_tags(text),reply_markup=approve_markup,parse_mode='HTML')
 
 
-        saved_photo=[]
+        #saved_photo=[]
 
         user_states.pop(chat_id)
     elif user_states.get(chat_id) == 'awaiting_admin':
@@ -521,7 +527,7 @@ def generate_category_keyboard_all(chat_id):
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,saved_photo
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
 
@@ -1007,6 +1013,9 @@ def process_callback_query(json_data):
 
     elif callback_data_message.startswith("approve"):
         user_id=callback_data_message.split('#')[1]
+
+
+
         approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}')],
                    [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}')]]
         approve_admin_markup = InlineKeyboardMarkup(approve_admin)
@@ -1023,8 +1032,20 @@ def process_callback_query(json_data):
                 reply_markup=nazad_markup
             )
         else:
-            bot.send_message(group_id,text=add_b_tags(query['message']['text']),reply_markup=approve_admin_markup,parse_mode='HTML')
 
+            if saved_photo:
+                media_group = [
+                    InputMediaPhoto(media=file_id) for file_id in saved_photo
+                ]
+                bot.send_media_group(
+                    chat_id=group_id,
+                    media=media_group,
+                )
+                bot.send_message(group_id, text=add_b_tags(query['message']['text']), reply_markup=approve_admin_markup,
+                                 parse_mode='HTML')
+            else:
+                bot.send_message(group_id, text=add_b_tags(query['message']['text']), reply_markup=approve_admin_markup,
+                                 parse_mode='HTML')
             bot.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,
@@ -1035,6 +1056,10 @@ def process_callback_query(json_data):
                 message_id=message_id,
                 reply_markup=nazad_markup
             )
+
+
+
+
 
 
 
