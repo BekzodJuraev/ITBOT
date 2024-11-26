@@ -17,6 +17,7 @@ group_id=-1002303656850
 admin=1650034270
 #admin=531080457
 user_states = {}
+user_photo={}
 #bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
 bot = telegram.Bot("7851466499:AAEvRraJBWbhrFyGOpIttv8Bcx22aa2rlxs")
 
@@ -272,7 +273,9 @@ def process_message(json_data):
             if len(saved_photo) == 1:
                 bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo[0], reply_markup=approve_markup,
                                      parse_mode='HTML')
+                saved_photo=[]
             else:
+                saved_photo[:] = saved_photo[:10]
                 media_group = [
                     InputMediaPhoto(media=file_id) for file_id in saved_photo
                 ]
@@ -280,6 +283,7 @@ def process_message(json_data):
                     chat_id=chat_id,
                     media=media_group,
                 )
+
 
 
 
@@ -1035,6 +1039,7 @@ def process_callback_query(json_data):
         else:
 
             if saved_photo:
+
                 media_group = [
                     InputMediaPhoto(media=file_id) for file_id in saved_photo
                 ]
