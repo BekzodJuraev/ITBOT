@@ -378,6 +378,7 @@ def process_message(json_data):
         if message_text == '/start':
             try:
                 Telegram_users.objects.create(user_id=chat_id)
+
             except Exception as e:
                 pass
                 #print(e)
@@ -1072,11 +1073,30 @@ def process_callback_query(json_data):
         if call == 'buy':
             if 'photo' in query['message']:
                 sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
-                                              caption=add_b_tags(query['message'].get('caption', '')),parse_mode='HTML')
+                                              caption=add_b_tags(query['message'].get('caption', '')),
+                                              reply_markup=bron_markup, parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
-                sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']),parse_mode='HTML')
-                text = query['message']['text']
+                if saved_photo:
+                    media_group = [
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(query['message']['text']) if i == 0 else None,
+                                        parse_mode='HTML')
+                        for i, file_id in enumerate(saved_photo)
+                    ]
+                    bot.send_media_group(
+                        chat_id=group_id,
+                        media=media_group,
+                    )
+                    sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
+                    sent_message = sent_message[0]  # The first message in the media group
+
+                    # first_message_id = first_sent_message.message_id
+
+                    text = query['message']['text']
+                else:
+                    sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']),
+                                                    reply_markup=bron_markup, parse_mode='HTML')
+                    text = query['message']['text']
 
         else:
             if 'photo' in query['message']:
@@ -1084,8 +1104,27 @@ def process_callback_query(json_data):
                                               caption=add_b_tags(query['message'].get('caption', '')), reply_markup=bron_markup,parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
-                sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']), reply_markup=bron_markup,parse_mode='HTML')
-                text = query['message']['text']
+                if saved_photo:
+                    media_group = [
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(query['message']['text']) if i == 0 else None, parse_mode='HTML')
+                        for i, file_id in enumerate(saved_photo)
+                    ]
+                    bot.send_media_group(
+                        chat_id=group_id,
+                        media=media_group,
+                    )
+                    sent_message=bot.send_media_group(chat_id=main_id, media=media_group)
+                    sent_message = sent_message[0]  # The first message in the media group
+
+                    #first_message_id = first_sent_message.message_id
+
+                    text = query['message']['text']
+                else:
+                    sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']),
+                                                    reply_markup=bron_markup, parse_mode='HTML')
+                    text = query['message']['text']
+
+
 
 
 
@@ -1121,7 +1160,8 @@ def process_callback_query(json_data):
         Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod,type=type)
 
 
-        bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}',disable_web_page_preview=True)
+
+        bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/MIRELEKTRONIKI_UZB/{sent_message.message_id}',disable_web_page_preview=True)
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
     elif callback_data_message == 'bron':
