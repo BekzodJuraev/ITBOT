@@ -7,14 +7,18 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import re
 from .models import Posts,Telegram_users
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo
-group_id=-1002437770225
-main_id=-1002373097450
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo,InputMediaPhoto
+main_id=-1002386134197
+group_id=-1002303656850
+#main_id=-1002373097450
+#group_id=-10024377702253
+
 #admin=202053300
 admin=1650034270
 #admin=531080457
 user_states = {}
-bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
+#bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
+bot = telegram.Bot("7851466499:AAEvRraJBWbhrFyGOpIttv8Bcx22aa2rlxs")
 
 
 def add_b_tags(text):
@@ -140,7 +144,7 @@ awaiting_price = [[InlineKeyboardButton("🔙Назад", callback_data='awaitin
 awaiting_price_markup = InlineKeyboardMarkup(awaiting_price)
 awaiting_city = [[InlineKeyboardButton("🔙Назад", callback_data='awaiting_city')]]
 awaiting_city_markup = InlineKeyboardMarkup(awaiting_city)
-saved_photo = None
+saved_photo = []
 skip_catergory=None
 skip_pod_category=None
 skip_pod_pod_category=""
@@ -192,17 +196,40 @@ def process_message(json_data):
         bot.send_message(group_id, text=support)
 
     elif user_states.get(chat_id) == "awaiting_photo":
-        user_states.pop(chat_id)
-        if 'photo' in json_data['message']:
-            photo = json_data['message']['photo'][-1]  # Get the highest resolution
-            saved_photo = photo['file_id']
+        #user_states.pop(chat_id)
 
-            bot.send_message(
-                chat_id,
-                text=text_category,
-                reply_markup=sell_skip_markup
-            )
+        if 'photo' in json_data['message']:
+            if 'media_group_id' in json_data['message']:
+                photo = json_data['message']['photo'][-1]
+                saved_photo.append(photo['file_id'])
+                if len(saved_photo) == 1:
+                    bot.send_message(
+                        chat_id,
+                        text=text_category,
+                        reply_markup=sell_skip_markup
+                    )
+
+
+            else:
+                user_states.pop(chat_id)
+                photo = json_data['message']['photo'][-1]
+                saved_photo.append(photo['file_id'])
+                bot.send_message(
+                    chat_id,
+                    text=text_category,
+                    reply_markup=sell_skip_markup
+                )
+
+
+
+            #media_group = [InputMediaPhoto(media=file_id) for file_id in saved_photo]
+            #bot.send_media_group(chat_id=531080457, media=media_group)
+            #print(saved_photo)
+
+
+
     elif user_states.get(chat_id) == 'awaiting_description':
+
 
 
         description=message_text
@@ -242,12 +269,33 @@ def process_message(json_data):
         )
 
         if saved_photo:
-            bot.send_photo(chat_id,caption=add_b_tags(text),photo=saved_photo,reply_markup=approve_markup,parse_mode='HTML')
+            if len(saved_photo) == 1:
+                bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo[0], reply_markup=approve_markup,
+                                     parse_mode='HTML')
+            else:
+                media_group = [
+                    InputMediaPhoto(media=file_id, caption=add_b_tags(text) if i == 0 else None, parse_mode='HTML')
+                    for i, file_id in enumerate(saved_photo)
+                ]
+                bot.send_media_group(
+                    chat_id=chat_id,
+                    media=media_group,
+                )
+                # bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo, reply_markup=approve_markup,
+                #                      parse_mode='HTML')
+                bot.send_message(
+                    chat_id=chat_id,
+                    text="Choose",
+                    reply_markup=approve_markup  # Your inline keyboard here
+                )
+
+
+            #bot.send_media_group(chat_id,caption=add_b_tags(text),photo=saved_photo,reply_markup=approve_markup,parse_mode='HTML')
         else:
             text=bot.send_message(chat_id,text=add_b_tags(text),reply_markup=approve_markup,parse_mode='HTML')
 
 
-        saved_photo=None
+        saved_photo=[]
 
         user_states.pop(chat_id)
     elif user_states.get(chat_id) == 'awaiting_admin':
@@ -897,7 +945,9 @@ def process_callback_query(json_data):
             reply_markup=sell_skip_markup
         )
     elif callback_data_message.startswith("cat"):
+
         try:
+            user_states.pop(chat_id)
             skip_catergory = callback_data_message.split('#')[1]
         except:
             pass
