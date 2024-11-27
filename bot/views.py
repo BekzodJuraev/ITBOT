@@ -10,18 +10,17 @@ from django.views.decorators.http import require_POST
 import re
 from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo,InputMediaPhoto
-main_id=-1002386134197
-group_id=-1002303656850
-#main_id=-1002373097450
-#group_id=-10024377702253
 
-#admin=202053300
-admin=1650034270
+main_id=-1002373097450
+group_id=-10024377702253
+
+admin=202053300
+#admin=1650034270
 #admin=531080457
 user_states = {}
 user_photo={}
-#bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
-bot = telegram.Bot("7851466499:AAEvRraJBWbhrFyGOpIttv8Bcx22aa2rlxs")
+bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
+
 
 
 def add_b_tags(text):
