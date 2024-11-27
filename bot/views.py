@@ -1150,8 +1150,7 @@ def process_callback_query(json_data):
         if call == 'buy':
             if 'photo' in query['message']:
                 sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
-                                              caption=add_b_tags(query['message'].get('caption', '')),
-                                              reply_markup=bron_markup, parse_mode='HTML')
+                                              caption=add_b_tags(query['message'].get('caption', '')), parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
                 if random_key:
@@ -1169,13 +1168,13 @@ def process_callback_query(json_data):
                     text = query['message']['text']
                 else:
                     sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']),
-                                                    reply_markup=bron_markup, parse_mode='HTML')
+                                                    parse_mode='HTML')
                     text = query['message']['text']
 
         else:
             if 'photo' in query['message']:
                 sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
-                                              caption=add_b_tags(query['message'].get('caption', '')),parse_mode='HTML')
+                                              caption=add_b_tags(query['message'].get('caption', '')), reply_markup=bron_markup,parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
                 if random_key:
@@ -1194,7 +1193,7 @@ def process_callback_query(json_data):
 
                     text = query['message']['text']
                 else:
-                    sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']), parse_mode='HTML')
+                    sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']), reply_markup=bron_markup, parse_mode='HTML')
                     text = query['message']['text']
 
 
@@ -1234,7 +1233,7 @@ def process_callback_query(json_data):
 
 
 
-        bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/MIRELEKTRONIKI_UZB/{sent_message.message_id}',disable_web_page_preview=True)
+        bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}',disable_web_page_preview=True)
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
     elif callback_data_message == 'bron':
