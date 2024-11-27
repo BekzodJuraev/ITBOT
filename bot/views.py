@@ -12,7 +12,7 @@ from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo,InputMediaPhoto
 
 main_id=-1002373097450
-group_id=-10024377702253
+group_id=-1002437770225
 
 admin=202053300
 #admin=1650034270
