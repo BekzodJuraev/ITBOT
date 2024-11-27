@@ -19,7 +19,7 @@ async def set_webhook(dispatcher):
     try:
         webhook_url = f"{ngrok_url}"
         await bot.set_webhook(webhook_url)
-        print("Hello")
+
         logging.info(f"Webhook set to {webhook_url}")
     except Exception as e:
         logging.error(f"Failed to set webhook: {e}")

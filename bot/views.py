@@ -1,5 +1,7 @@
 from django.http import HttpResponse
 from datetime import date
+import random
+import string
 from django.shortcuts import render
 import json
 import telegram
@@ -177,7 +179,7 @@ def fetch_active(chat_id):
 
     return active
 def process_message(json_data):
-    global saved_photo,price,description,city,phone,call
+    global saved_photo,price,description,city,phone,call,user_photo
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
     message=json_data['message']
@@ -301,11 +303,14 @@ def process_message(json_data):
                     chat_id=chat_id,
                     media=media_group,
                 )
+                random_key = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+                user_photo[random_key]=saved_photo
+                # print(user_photo)
 
 
 
 
-                approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}')],
+                approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}#{random_key}')],
                            [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
                 approve_markup = InlineKeyboardMarkup(approve)
                 # bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo, reply_markup=approve_markup,
@@ -410,11 +415,13 @@ def process_message(json_data):
             #bot.send_message(chat_id, text, reply_markup=inline_markup)
             bot.send_message(chat_id, text,  reply_markup=markup_reply) ##repl=markup_reply
         elif message_text == "💰 Продажа":
+            saved_photo=[]
             call = 'sell'
 
             bot.send_message(chat_id,text="📸 Пожалуйста, отправьте фото. Не более 10 штук.",reply_markup=nazad_markup)
             user_states[chat_id] = 'awaiting_photo'
         elif message_text == "🛒 Покупка":
+            saved_photo=[]
             call ='buy'
 
             bot.send_message(chat_id, text="📸 Пожалуйста, отправьте фото. Не более 10 штук.", reply_markup=sell_markup)
@@ -549,7 +556,7 @@ def generate_category_keyboard_all(chat_id):
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,saved_photo
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
 
@@ -1063,12 +1070,26 @@ def process_callback_query(json_data):
 
     elif callback_data_message.startswith("approve"):
         user_id=callback_data_message.split('#')[1]
+        random_key=None
+        try:
+            random_key=callback_data_message.split('#')[2]
+        except:
+            pass
+
+        if random_key:
+            approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}#{random_key}')],
+                             [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}#{random_key}')]]
+            approve_admin_markup = InlineKeyboardMarkup(approve_admin)
+        else:
+            approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}')],
+                             [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}')]]
+            approve_admin_markup = InlineKeyboardMarkup(approve_admin)
 
 
 
-        approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}')],
-                   [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}')]]
-        approve_admin_markup = InlineKeyboardMarkup(approve_admin)
+
+
+
         if 'photo' in query['message']:
             bot.send_photo(group_id,photo=query['message']['photo'][0]['file_id'],caption=add_b_tags(query['message'].get('caption', '')),reply_markup=approve_admin_markup,parse_mode='HTML')
             bot.edit_message_caption(
@@ -1083,10 +1104,10 @@ def process_callback_query(json_data):
             )
         else:
 
-            if saved_photo:
+            if random_key:
 
                 media_group = [
-                    InputMediaPhoto(media=file_id) for file_id in saved_photo
+                    InputMediaPhoto(media=file_id) for file_id in user_photo[random_key]
                 ]
                 bot.send_media_group(
                     chat_id=group_id,
@@ -1120,6 +1141,13 @@ def process_callback_query(json_data):
 
     elif callback_data_message.startswith("publish"):
         user_id = callback_data_message.split('#')[1]
+        random_key = None
+        try:
+            random_key = callback_data_message.split('#')[2]
+        except:
+            pass
+
+
         if call == 'buy':
             if 'photo' in query['message']:
                 sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
@@ -1127,20 +1155,17 @@ def process_callback_query(json_data):
                                               reply_markup=bron_markup, parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
-                if saved_photo:
+                if random_key:
                     media_group = [
                         InputMediaPhoto(media=file_id, caption=add_b_tags(query['message']['text']) if i == 0 else None,
                                         parse_mode='HTML')
-                        for i, file_id in enumerate(saved_photo)
+                        for i, file_id in enumerate(user_photo[random_key])
                     ]
-                    bot.send_media_group(
-                        chat_id=group_id,
-                        media=media_group,
-                    )
+
                     sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
                     sent_message = sent_message[0]  # The first message in the media group
 
-                    # first_message_id = first_sent_message.message_id
+                    user_photo.pop(random_key)
 
                     text = query['message']['text']
                 else:
@@ -1154,17 +1179,17 @@ def process_callback_query(json_data):
                                               caption=add_b_tags(query['message'].get('caption', '')), reply_markup=bron_markup,parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
-                if saved_photo:
+                if random_key:
                     media_group = [
                         InputMediaPhoto(media=file_id, caption=add_b_tags(query['message']['text']) if i == 0 else None, parse_mode='HTML')
-                        for i, file_id in enumerate(saved_photo)
+                        for i, file_id in enumerate(user_photo[random_key])
                     ]
-                    bot.send_media_group(
-                        chat_id=group_id,
-                        media=media_group,
-                    )
+
                     sent_message=bot.send_media_group(chat_id=main_id, media=media_group)
                     sent_message = sent_message[0]  # The first message in the media group
+
+                    user_photo.pop(random_key)
+
 
                     #first_message_id = first_sent_message.message_id
 
