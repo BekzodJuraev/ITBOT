@@ -158,6 +158,24 @@ nazad_markup = InlineKeyboardMarkup(nazad_key)
 bron = [[InlineKeyboardButton("📝Забронировать", callback_data='bron')]]
 bron_markup = InlineKeyboardMarkup(bron)
 call=None
+
+def fetch_active(chat_id):
+    active=0
+    fetch_profile = Telegram_users.objects.all()
+    for item in fetch_profile:
+        try:
+            if chat_id == item.user_id:
+                active += 1
+            else:
+                check = bot.send_message(chat_id=item.user_id, text=".")
+                bot.delete_message(chat_id=item.user_id, message_id=check.message_id)
+                active += 1
+
+
+        except Exception as e:
+            pass
+
+    return active
 def process_message(json_data):
     global saved_photo,price,description,city,phone,call
     chat_id = json_data['message']['chat']['id']
@@ -192,7 +210,7 @@ def process_message(json_data):
     elif user_states.get(chat_id) == 'awaiting_support_text':
 
         support = f"Пользователь @{chat_username} id:{chat_id} написал: {message_text}"
-        bot.send_message(chat_id,text='📩Ваше сообщение отправлено, ждите ответ.')
+        bot.send_message(chat_id,text='📩Ваше сообщение отправлено, ждите ответ.',reply_markup=nazad_markup)
 
         bot.send_message(group_id, text=support)
 
@@ -428,10 +446,9 @@ def process_message(json_data):
             bot.send_message(chat_id, text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!", reply_markup=nazad_markup)
             user_states[chat_id] = 'awaiting_support_text'
         elif message_text == "📢 Купить рекламу":
-            statics_bot = Telegram_users.objects.filter(block
-                                                        =False).count()
+
             statics_chanel=bot.get_chat_member_count(main_id)
-            text = f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\nТекущая статистика:  \n📊 Кол-во пользователей на канале: {statics_chanel} \n👥 Кол-во активных пользователей в боте: {statics_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+            text = f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\nТекущая статистика:  \n📊 Кол-во пользователей на канале: {statics_chanel} \n👥 Кол-во активных пользователей в боте: {fetch_active(chat_id)}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
 
             bot.send_message(chat_id, text=text, reply_markup=nazad_markup)
             user_states[chat_id] = 'awaiting_ad_text'
@@ -545,11 +562,26 @@ def process_callback_query(json_data):
 
     if callback_data_message == "ads":
         statics_bot=Telegram_users.objects.all().count()
-        active_bot=Telegram_users.objects.filter(block=False).count()
+        active=0
+        fetch_profile = Telegram_users.objects.all()
+        for item in fetch_profile:
+            try:
+                check = bot.send_message(chat_id=item.user_id, text=".")
+                bot.delete_message(chat_id=item.user_id, message_id=check.message_id)
+                active += 1
+            except Exception as e:
+                print(e)
+        active=0
+
+
+
+
+
+
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text=f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\n\nТекущая статистика:  📊 Общее количество пользователей: \n{statics_bot} \n👥 Активные пользователи: {active_bot}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+            text=f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\n\nТекущая статистика:  📊 Общее количество пользователей: \n{statics_bot} \n👥 Активные пользователи: {active}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
 
         )
 
@@ -861,7 +893,20 @@ def process_callback_query(json_data):
                 )
             user_selected_category.pop(chat_id)
         except Exception as e:
-            pass
+
+            pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
+            pc_search_markup = InlineKeyboardMarkup(pc_search)
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message_id,
+                text="❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории."
+            )
+            bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=pc_search_markup
+            )
+
             #print(e)
 
 
@@ -1261,13 +1306,13 @@ def process_callback_query(json_data):
         #member_count=bot.get_chat_member_count(chat_id)
 
         profile_count=Telegram_users.objects.all().count()
-        profile_active=Telegram_users.objects.filter(active=False).count()
+        #profile_active=Telegram_users.objects.filter(active=False).count()
 
 
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
-            text=f"Текущая статистика:\n\n📊 Общее количество пользователей в боте: {profile_count} \n👥 Активные пользователи в боте: {profile_active}"
+            text=f"Текущая статистика:\n\n📊 Общее количество пользователей в боте: {profile_count} \n👥 Активные пользователи в боте: {fetch_active(chat_id)}"
         )
         bot.edit_message_reply_markup(
             chat_id=chat_id,
