@@ -1175,7 +1175,7 @@ def process_callback_query(json_data):
         else:
             if 'photo' in query['message']:
                 sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
-                                              caption=add_b_tags(query['message'].get('caption', '')), reply_markup=bron_markup,parse_mode='HTML')
+                                              caption=add_b_tags(query['message'].get('caption', '')),parse_mode='HTML')
                 text = query['message'].get('caption', '')
             else:
                 if random_key:
@@ -1194,8 +1194,7 @@ def process_callback_query(json_data):
 
                     text = query['message']['text']
                 else:
-                    sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']),
-                                                    reply_markup=bron_markup, parse_mode='HTML')
+                    sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']), parse_mode='HTML')
                     text = query['message']['text']
 
 
