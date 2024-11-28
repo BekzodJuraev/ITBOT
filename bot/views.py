@@ -10,16 +10,18 @@ from django.views.decorators.http import require_POST
 import re
 from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo,InputMediaPhoto
-
-main_id=-1002373097450
-group_id=-1002437770225
+main_id=-1002386134197
+group_id=-1002303656850
+#main_id=-1002373097450
+#group_id=-1002437770225
 
 admin=202053300
 #admin=1650034270
 #admin=531080457
 user_states = {}
 user_photo={}
-bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
+#bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
+bot = telegram.Bot("7851466499:AAEvRraJBWbhrFyGOpIttv8Bcx22aa2rlxs")
 
 
 
@@ -185,6 +187,7 @@ def process_message(json_data):
     chat_username = json_data['message']['chat'].get('username', 'username')
     chat_name = json_data['message']['chat'].get('first_name', 'first_name')
 
+
     if 'reply_to_message' in json_data['message']:
         reply_chat_id = json_data['message']['reply_to_message']['chat'].get('id', None)
         reply_message=json_data['message']['reply_to_message']['text']
@@ -195,197 +198,83 @@ def process_message(json_data):
             end = [[InlineKeyboardButton("❌Закончить диалог", callback_data='nazad')]]
             end_markup = InlineKeyboardMarkup(end)
             bot.send_message(user_id,text=f'Ответ от поддержки: {message_text}', reply_markup=end_markup)
-
-
-    # Check if the user is in "ads" state
-    if user_states.get(chat_id) == 'awaiting_ad_text':
-        mention_text = f"[{chat_username}](tg://user?id={chat_id})"
-        #mention_text = f"[{name}](tg://user?id={user})"
-
-        ads = (f"📢 Новая заявка на размещение\nрекламы!\nТекст рекламы:\n{message_text} "
-               f"\n💬 Свяжитесь с пользователем\n {mention_text} для уточнения деталей")
-        bot.send_message(group_id, text=ads,parse_mode="Markdown")
-        bot.send_message(chat_id, text=f"✅ Ваша реклама успешно отправлена! Ожидайте, администратор свяжется с вами для уточнения деталей.")
-        user_states.pop(chat_id)
-
-    elif user_states.get(chat_id) == 'awaiting_support_text':
-
-        support = f"Пользователь @{chat_username} id:{chat_id} написал: {message_text}"
-        bot.send_message(chat_id,text='📩Ваше сообщение отправлено, ждите ответ.',reply_markup=nazad_markup)
-
-        bot.send_message(group_id, text=support)
-
-    elif user_states.get(chat_id) == "awaiting_photo":
-        #user_states.pop(chat_id)
-
-        if 'photo' in json_data['message']:
-            if 'media_group_id' in json_data['message']:
-                photo = json_data['message']['photo'][-1]
-                saved_photo.append(photo['file_id'])
-                if len(saved_photo) == 1:
-                    bot.send_message(
-                        chat_id,
-                        text=text_category,
-                        reply_markup=sell_skip_markup
-                    )
-
-
-            else:
-                user_states.pop(chat_id)
-                photo = json_data['message']['photo'][-1]
-                saved_photo.append(photo['file_id'])
-                bot.send_message(
-                    chat_id,
-                    text=text_category,
-                    reply_markup=sell_skip_markup
-                )
-
-
-
-            #media_group = [InputMediaPhoto(media=file_id) for file_id in saved_photo]
-            #bot.send_media_group(chat_id=531080457, media=media_group)
-            #print(saved_photo)
-
-
-
-    elif user_states.get(chat_id) == 'awaiting_description':
-
-
-
-        description=message_text
-        bot.send_message(chat_id,text='📞 Отправьте свои контактные данные.', reply_markup=awaiting_description_markup)
-        user_states[chat_id] = 'awaiting_price'
-    elif user_states.get(chat_id) == 'awaiting_price':
-
-
-        phone=message_text
-        bot.send_message(chat_id,text='💰 Укажите стоимость товара', reply_markup=awaiting_price_markup)
-        user_states[chat_id] = 'awaiting_city'
-    elif user_states.get(chat_id) == 'awaiting_city':
-
-
-        price=message_text
-        bot.send_message(chat_id,text='🏙️ Укажите город одним словом или с нижним подчёркиванием.  Например: Санкт_Петербург. (Это нужно для формирования хэштега города, чтобы облегчить поиск).', reply_markup=awaiting_city_markup)
-        user_states[chat_id] = 'awaiting_complete'
-    elif user_states.get(chat_id) == 'awaiting_complete':
-        approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}')],
-                [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
-        approve_markup = InlineKeyboardMarkup(approve)
-        city=message_text
-        user=Telegram_users.objects.filter(user_id=chat_id).first()
-        text = (
-            f"Тип: #{'Продажа' if call == 'sell' else 'Покупка'}\n\n"
-            f"Категория: #{skip_catergory}\n"
-            f"Подкатегория: #{skip_pod_category}\n"
-            f"Подкатегория: #{skip_pod_pod_category}\n"
-            f"Пользователь: #user{user.id}\n"
-            f"Айди: {chat_id}\n\n"
-            f"Описание: {description}\n\n"
-            f"Контакты: {phone}\n"
-            f"Цена: {price}\n"
-            f"Город: #{city}\n"
-            f"Автор: @{chat_username}\n\n"
-            f"Отправлено через: @ITbarakholka_bot"
-        )
-
-        if saved_photo:
-            if len(saved_photo) == 1:
-                bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo[0], reply_markup=approve_markup,
-                                     parse_mode='HTML')
-                saved_photo=[]
-            else:
-                saved_photo[:] = saved_photo[:10]
-                media_group = [
-                    InputMediaPhoto(media=file_id) for file_id in saved_photo
-                ]
-                bot.send_media_group(
-                    chat_id=chat_id,
-                    media=media_group,
-                )
-                random_key = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
-                user_photo[random_key]=saved_photo
-                # print(user_photo)
-
-
-
-
-                approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}#{random_key}')],
-                           [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
-                approve_markup = InlineKeyboardMarkup(approve)
-                # bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo, reply_markup=approve_markup,
-                #                      parse_mode='HTML')
-                bot.send_message(
-                    chat_id=chat_id,
-                    text=add_b_tags(text),
-                    reply_markup=approve_markup,
-                    parse_mode='HTML'# Your inline keyboard here
-                )
-
-
-            #bot.send_media_group(chat_id,caption=add_b_tags(text),photo=saved_photo,reply_markup=approve_markup,parse_mode='HTML')
-        else:
-            text=bot.send_message(chat_id,text=add_b_tags(text),reply_markup=approve_markup,parse_mode='HTML')
-
-
-        #saved_photo=[]
-
-        user_states.pop(chat_id)
-    elif user_states.get(chat_id) == 'awaiting_admin':
-        success_count = 0
-        failure_count = 0
-
-        profiles = Telegram_users.objects.all()
-        for item in profiles:
-            try:
-                if 'photo' in message:
-                    response = bot.send_photo(item.user_id, photo=message['photo'][0]['file_id'],
-                                              caption=message.get('caption', ''))
-
-                elif 'video' in message:
-                    response = bot.send_video(item.user_id, video=message['video']['file_id'],
-                                              caption=message.get('caption', ''))
-                else:
-                    response = bot.send_message(chat_id=item.user_id, text=message_text)
-                success_count += 1
-            except Exception as e:
-                failure_count += 1
-                item.active=True
-                item.save()
-                #print(f"Failed to send to {item.user_id}: {e}")
-
-        approve_ads = [[InlineKeyboardButton("🔙Меню", callback_data='statics_nazad')]]
-        approve_ads_markup = InlineKeyboardMarkup(approve_ads)
-        bot.send_message(chat_id,text=f"✅ Рассылка успешно отправлена пользователям бота. Удалось отправить: {success_count} Не удалось отправить: {failure_count}",reply_markup=approve_ads_markup)
-        user_states.pop(chat_id)
-
-    elif user_states.get(chat_id) == 'awaiting_ban':
-        text=f"👤 Вы выбрали пользователя с ID: {message_text}. Выберите действие:"
+    if message_text == '/start':
         try:
-            profile = Telegram_users.objects.filter(user_id=message_text).first()
-            if profile:
-                if profile.block == True:
-                    block = [[InlineKeyboardButton("🔓 Разблокировать", callback_data=f'unblock#{message_text}')],
-                             [InlineKeyboardButton("🔙Назад", callback_data='ban')]
-                             ]
-                    block_markup = InlineKeyboardMarkup(block)
-                    bot.send_message(chat_id=admin, text=text, reply_markup=block_markup)
-                elif profile.block == False:
-                    block = [[InlineKeyboardButton("❌ Заблокировать", callback_data=f'block#{message_text}')],
-                             [InlineKeyboardButton("🔙Назад", callback_data='ban')]
-                             ]
-                    block_markup = InlineKeyboardMarkup(block)
-                    bot.send_message(chat_id=admin, text=text, reply_markup=block_markup)
-            else:
-                bot.send_message(chat_id=admin, text="❌Этот пользователь ещё не запускал бота")
+            Telegram_users.objects.create(user_id=chat_id)
 
         except Exception as e:
             pass
+            # print(e)
+
+        text = (f"✨ Привет! Этот бот создан для удобной и быстрой публикации "
+                f"объявлений на канале @ITbarakholka. 🚀 Рад приветствовать тебя, @{chat_username}!")
+        # bot.send_message(chat_id, text, reply_markup=inline_markup)
+        bot.send_message(chat_id, text, reply_markup=markup_reply)  ##repl=markup_reply
+    elif message_text == "💰 Продажа":
+        saved_photo = []
+        call = 'sell'
+
+        bot.send_message(chat_id, text="📸 Пожалуйста, отправьте фото. Не более 10 штук.", reply_markup=nazad_markup)
+        user_states[chat_id] = 'awaiting_photo'
+    elif message_text == "🛒 Покупка":
+        saved_photo = []
+        call = 'buy'
+
+        bot.send_message(chat_id, text="📸 Пожалуйста, отправьте фото. Не более 10 штук.", reply_markup=sell_markup)
+        user_states[chat_id] = 'awaiting_photo'
+
+    elif message_text == "📋 Мои объявления":
+        try:
+            post = Posts.objects.filter(user_id=chat_id)
+            for item in post:
+                delete_post = [[InlineKeyboardButton("❌Удалить", callback_data=f'delete_posts#{item.message_id}')]]
+                delete_post_markup = InlineKeyboardMarkup(delete_post)
+                bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id,
+                                 reply_markup=delete_post_markup)
+                bot.send_message(item.user_id, text=f'Ссылка на пост:https://t.me/mainbarxolka/{item.message_id}',
+                                 disable_web_page_preview=True)
+
+
+        except Exception as e:
+            pass
+            # print(e)
+        # Handle posts action
+
+    elif message_text == "🔍 Поиск по категориям":
+        text = "🔍 Выберите категорию для поиска объявлений"
+        # continue_markup = generate_category_keyboard(chat_id)
+
+        bot.send_message(chat_id, text=text, reply_markup=top_category_markup)
+    elif message_text == "🛠️ Поддержка":
+
+        bot.send_message(chat_id,
+                         text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!",
+                         reply_markup=nazad_markup)
+        user_states[chat_id] = 'awaiting_support_text'
+    elif message_text == "📢 Купить рекламу":
+
+        statics_chanel = bot.get_chat_member_count(main_id)
+        text = f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\nТекущая статистика:  \n📊 Кол-во пользователей на канале: {statics_chanel} \n👥 Кол-во активных пользователей в боте: {fetch_active(chat_id)}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
+
+        bot.send_message(chat_id, text=text, reply_markup=nazad_markup)
+        user_states[chat_id] = 'awaiting_ad_text'
 
 
 
 
 
-        user_states.pop(chat_id)
+    elif message_text == '/admin':
+        if chat_id == admin or chat_id == 531080457:
+            bot.send_message(chat_id, text=admin_menu_text, reply_markup=admin_keyboard_markup)
+    elif message_text == '/users':
+        if chat_id == admin:
+            today = Telegram_users.objects.filter(created_at__date=date.today()).count()
+            all_users = Telegram_users.objects.all().count()
+            bot.send_message(chat_id,
+                             text=f'Всего пользователей в боте: {all_users} \nНовых пользователей за сутки: {today}')
+
+    # Check if the user is in "ads" state
+
 
 
 
@@ -400,77 +289,187 @@ def process_message(json_data):
 
 
     else:
+        if user_states.get(chat_id) == 'awaiting_ad_text':
+            mention_text = f"[{chat_username}](tg://user?id={chat_id})"
+            # mention_text = f"[{name}](tg://user?id={user})"
 
-        if message_text == '/start':
+            ads = (f"📢 Новая заявка на размещение\nрекламы!\nТекст рекламы:\n{message_text} "
+                   f"\n💬 Свяжитесь с пользователем\n {mention_text} для уточнения деталей")
+            bot.send_message(group_id, text=ads, parse_mode="Markdown")
+            bot.send_message(chat_id,
+                             text=f"✅ Ваша реклама успешно отправлена! Ожидайте, администратор свяжется с вами для уточнения деталей.")
+            user_states.pop(chat_id)
+
+        elif user_states.get(chat_id) == 'awaiting_support_text':
+
+            support = f"Пользователь @{chat_username} id:{chat_id} написал: {message_text}"
+            bot.send_message(chat_id, text='📩Ваше сообщение отправлено, ждите ответ.', reply_markup=nazad_markup)
+
+            bot.send_message(group_id, text=support)
+
+        elif user_states.get(chat_id) == "awaiting_photo":
+            # user_states.pop(chat_id)
+
+            if 'photo' in json_data['message']:
+                if 'media_group_id' in json_data['message']:
+                    photo = json_data['message']['photo'][-1]
+                    saved_photo.append(photo['file_id'])
+                    if len(saved_photo) == 1:
+                        bot.send_message(
+                            chat_id,
+                            text=text_category,
+                            reply_markup=sell_skip_markup
+                        )
+
+
+                else:
+                    user_states.pop(chat_id)
+                    photo = json_data['message']['photo'][-1]
+                    saved_photo.append(photo['file_id'])
+                    bot.send_message(
+                        chat_id,
+                        text=text_category,
+                        reply_markup=sell_skip_markup
+                    )
+
+                # media_group = [InputMediaPhoto(media=file_id) for file_id in saved_photo]
+                # bot.send_media_group(chat_id=531080457, media=media_group)
+                # print(saved_photo)
+
+
+
+        elif user_states.get(chat_id) == 'awaiting_description':
+
+            description = message_text
+            bot.send_message(chat_id, text='📞 Отправьте свои контактные данные.',
+                             reply_markup=awaiting_description_markup)
+            user_states[chat_id] = 'awaiting_price'
+        elif user_states.get(chat_id) == 'awaiting_price':
+
+            phone = message_text
+            bot.send_message(chat_id, text='💰 Укажите стоимость товара', reply_markup=awaiting_price_markup)
+            user_states[chat_id] = 'awaiting_city'
+        elif user_states.get(chat_id) == 'awaiting_city':
+
+            price = message_text
+            bot.send_message(chat_id,
+                             text='🏙️ Укажите город одним словом или с нижним подчёркиванием.  Например: Санкт_Петербург. (Это нужно для формирования хэштега города, чтобы облегчить поиск).',
+                             reply_markup=awaiting_city_markup)
+            user_states[chat_id] = 'awaiting_complete'
+        elif user_states.get(chat_id) == 'awaiting_complete':
+            approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}')],
+                       [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
+            approve_markup = InlineKeyboardMarkup(approve)
+            city = message_text
+            user = Telegram_users.objects.filter(user_id=chat_id).first()
+            text = (
+                f"Тип: #{'Продажа' if call == 'sell' else 'Покупка'}\n\n"
+                f"Категория: #{skip_catergory}\n"
+                f"Подкатегория: #{skip_pod_category}\n"
+                f"Подкатегория: #{skip_pod_pod_category}\n"
+                f"Пользователь: #user{user.id}\n"
+                f"Айди: {chat_id}\n\n"
+                f"Описание: {description}\n\n"
+                f"Контакты: {phone}\n"
+                f"Цена: {price}\n"
+                f"Город: #{city}\n"
+                f"Автор: @{chat_username}\n\n"
+                f"Отправлено через: @ITbarakholka_bot"
+            )
+
+            if saved_photo:
+                if len(saved_photo) == 1:
+                    bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo[0], reply_markup=approve_markup,
+                                   parse_mode='HTML')
+                    saved_photo = []
+                else:
+                    saved_photo[:] = saved_photo[:10]
+                    media_group = [
+                        InputMediaPhoto(media=file_id) for file_id in saved_photo
+                    ]
+                    bot.send_media_group(
+                        chat_id=chat_id,
+                        media=media_group,
+                    )
+                    random_key = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+                    user_photo[random_key] = saved_photo
+                    # print(user_photo)
+
+                    approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}#{random_key}')],
+                               [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
+                    approve_markup = InlineKeyboardMarkup(approve)
+                    # bot.send_photo(chat_id, caption=add_b_tags(text), photo=saved_photo, reply_markup=approve_markup,
+                    #                      parse_mode='HTML')
+                    bot.send_message(
+                        chat_id=chat_id,
+                        text=add_b_tags(text),
+                        reply_markup=approve_markup,
+                        parse_mode='HTML'  # Your inline keyboard here
+                    )
+
+                # bot.send_media_group(chat_id,caption=add_b_tags(text),photo=saved_photo,reply_markup=approve_markup,parse_mode='HTML')
+            else:
+                text = bot.send_message(chat_id, text=add_b_tags(text), reply_markup=approve_markup, parse_mode='HTML')
+
+            # saved_photo=[]
+
+            user_states.pop(chat_id)
+        elif user_states.get(chat_id) == 'awaiting_admin':
+            success_count = 0
+            failure_count = 0
+
+            profiles = Telegram_users.objects.all()
+            for item in profiles:
+                try:
+                    if 'photo' in message:
+                        response = bot.send_photo(item.user_id, photo=message['photo'][0]['file_id'],
+                                                  caption=message.get('caption', ''))
+
+                    elif 'video' in message:
+                        response = bot.send_video(item.user_id, video=message['video']['file_id'],
+                                                  caption=message.get('caption', ''))
+                    else:
+                        response = bot.send_message(chat_id=item.user_id, text=message_text)
+                    success_count += 1
+                except Exception as e:
+                    failure_count += 1
+                    item.active = True
+                    item.save()
+                    # print(f"Failed to send to {item.user_id}: {e}")
+
+            approve_ads = [[InlineKeyboardButton("🔙Меню", callback_data='statics_nazad')]]
+            approve_ads_markup = InlineKeyboardMarkup(approve_ads)
+            bot.send_message(chat_id,
+                             text=f"✅ Рассылка успешно отправлена пользователям бота. Удалось отправить: {success_count} Не удалось отправить: {failure_count}",
+                             reply_markup=approve_ads_markup)
+            user_states.pop(chat_id)
+
+        elif user_states.get(chat_id) == 'awaiting_ban':
+            text = f"👤 Вы выбрали пользователя с ID: {message_text}. Выберите действие:"
             try:
-                Telegram_users.objects.create(user_id=chat_id)
+                profile = Telegram_users.objects.filter(user_id=message_text).first()
+                if profile:
+                    if profile.block == True:
+                        block = [[InlineKeyboardButton("🔓 Разблокировать", callback_data=f'unblock#{message_text}')],
+                                 [InlineKeyboardButton("🔙Назад", callback_data='ban')]
+                                 ]
+                        block_markup = InlineKeyboardMarkup(block)
+                        bot.send_message(chat_id=admin, text=text, reply_markup=block_markup)
+                    elif profile.block == False:
+                        block = [[InlineKeyboardButton("❌ Заблокировать", callback_data=f'block#{message_text}')],
+                                 [InlineKeyboardButton("🔙Назад", callback_data='ban')]
+                                 ]
+                        block_markup = InlineKeyboardMarkup(block)
+                        bot.send_message(chat_id=admin, text=text, reply_markup=block_markup)
+                else:
+                    bot.send_message(chat_id=admin, text="❌Этот пользователь ещё не запускал бота")
 
             except Exception as e:
                 pass
-                #print(e)
 
-            text = (f"✨ Привет! Этот бот создан для удобной и быстрой публикации "
-                    f"объявлений на канале @ITbarakholka. 🚀 Рад приветствовать тебя, @{chat_username}!")
-            #bot.send_message(chat_id, text, reply_markup=inline_markup)
-            bot.send_message(chat_id, text,  reply_markup=markup_reply) ##repl=markup_reply
-        elif message_text == "💰 Продажа":
-            saved_photo=[]
-            call = 'sell'
-
-            bot.send_message(chat_id,text="📸 Пожалуйста, отправьте фото. Не более 10 штук.",reply_markup=nazad_markup)
-            user_states[chat_id] = 'awaiting_photo'
-        elif message_text == "🛒 Покупка":
-            saved_photo=[]
-            call ='buy'
-
-            bot.send_message(chat_id, text="📸 Пожалуйста, отправьте фото. Не более 10 штук.", reply_markup=sell_markup)
-            user_states[chat_id] = 'awaiting_photo'
-
-        elif message_text == "📋 Мои объявления":
-            try:
-                post = Posts.objects.filter(user_id=chat_id)
-                for item in post:
-                    delete_post = [[InlineKeyboardButton("❌Удалить", callback_data=f'delete_posts#{item.message_id}')]]
-                    delete_post_markup = InlineKeyboardMarkup(delete_post)
-                    bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id,
-                                     reply_markup=delete_post_markup)
-                    bot.send_message(item.user_id,text=f'Ссылка на пост:https://t.me/mainbarxolka/{item.message_id}',disable_web_page_preview=True)
+            user_states.pop(chat_id)
 
 
-            except Exception as e:
-                pass
-                #print(e)
-            # Handle posts action
-
-        elif message_text == "🔍 Поиск по категориям":
-            text = "🔍 Выберите категорию для поиска объявлений"
-            #continue_markup = generate_category_keyboard(chat_id)
-
-            bot.send_message(chat_id, text=text, reply_markup=top_category_markup)
-        elif message_text == "🛠️ Поддержка":
-
-            bot.send_message(chat_id, text="💬 Здесь вы можете задать вопрос нашей поддержке. Напишите Ваше сообщение в чат, и мы ответим Вам в ближайшее время!", reply_markup=nazad_markup)
-            user_states[chat_id] = 'awaiting_support_text'
-        elif message_text == "📢 Купить рекламу":
-
-            statics_chanel=bot.get_chat_member_count(main_id)
-            text = f"📢 Вы можете разместить свою рекламу на нашем канале и в боте !\nТекущая статистика:  \n📊 Кол-во пользователей на канале: {statics_chanel} \n👥 Кол-во активных пользователей в боте: {fetch_active(chat_id)}   \n\nПожалуйста, введите текст вашей рекламы. После отправки ваша заявка будет обработана, и администратор свяжется с вами!"
-
-            bot.send_message(chat_id, text=text, reply_markup=nazad_markup)
-            user_states[chat_id] = 'awaiting_ad_text'
-
-
-
-
-
-        elif message_text == '/admin':
-            if chat_id == admin or chat_id == 531080457:
-                bot.send_message(chat_id,text=admin_menu_text,reply_markup=admin_keyboard_markup)
-        elif message_text == '/users':
-            if chat_id == admin:
-                today=Telegram_users.objects.filter(created_at__date=date.today()).count()
-                all_users=Telegram_users.objects.all().count()
-                bot.send_message(chat_id, text=f'Всего пользователей в боте: {all_users} \nНовых пользователей за сутки: {today}')
 
 user_selected_category = {}
 user_selected_category_go = {}
@@ -853,16 +852,26 @@ def process_callback_query(json_data):
             elif user_selected_mode[chat_id] == 'buy':
                 mode="Покупка"
             search = user_selected_category.get(chat_id)
-            if mode:
-                posts = Posts.objects.filter(category__in=search,type=mode)
+            if search:
+                if mode:
+                    posts = Posts.objects.filter(category__in=search, type=mode)
+                else:
+                    posts = Posts.objects.filter(category__in=search)
             else:
-                posts = Posts.objects.filter(category__in=search)
+                if mode:
+                    posts = Posts.objects.filter(type=mode)
+                else:
+                    posts = Posts.objects.all()
+
+
+
 
 
 
             message_count = 0
 
             if posts:
+
                 for item in posts:
                     bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
                     bot.send_message(
@@ -882,6 +891,8 @@ def process_callback_query(json_data):
                         message_count = 0
 
                         break
+                if message_count != 0:
+                    bot.send_message(chat_id,text='❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории.')
 
 
             else:
