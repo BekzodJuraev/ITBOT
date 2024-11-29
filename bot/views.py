@@ -8,6 +8,7 @@ import telegram
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import re
+from telegram.utils.request import Request
 from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo,InputMediaPhoto
 main_id=-1002386134197
@@ -20,8 +21,9 @@ admin=202053300
 #admin=531080457
 user_states = {}
 user_photo={}
+request = Request(connect_timeout=20, read_timeout=20)
 #bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
-bot = telegram.Bot("7851466499:AAEvRraJBWbhrFyGOpIttv8Bcx22aa2rlxs")
+bot = telegram.Bot("7851466499:AAEvRraJBWbhrFyGOpIttv8Bcx22aa2rlxs",request=request)
 
 
 
