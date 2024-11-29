@@ -11,19 +11,17 @@ import re
 from telegram.utils.request import Request
 from .models import Posts,Telegram_users
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo,InputMediaPhoto
-main_id=-1002386134197
-group_id=-1002303656850
-#main_id=-1002373097450
-#group_id=-1002437770225
 
+main_id=-1002373097450
+group_id=-1002437770225
+ads_id=-4709784527
 admin=202053300
-#admin=1650034270
-#admin=531080457
+
 user_states = {}
 user_photo={}
 request = Request(connect_timeout=20, read_timeout=20)
-#bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
-bot = telegram.Bot("7851466499:AAEvRraJBWbhrFyGOpIttv8Bcx22aa2rlxs",request=request)
+bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4",request=request)
+
 
 
 
@@ -194,7 +192,7 @@ def process_message(json_data):
         reply_chat_id = json_data['message']['reply_to_message']['chat'].get('id', None)
         reply_message=json_data['message']['reply_to_message']['text']
 
-        if reply_chat_id == group_id:
+        if reply_chat_id == ads_id:
 
             user_id = re.search(r'id:(\d+)', reply_message).group(1)
             end = [[InlineKeyboardButton("❌Закончить диалог", callback_data='nazad')]]
@@ -297,7 +295,7 @@ def process_message(json_data):
 
             ads = (f"📢 Новая заявка на размещение\nрекламы!\nТекст рекламы:\n{message_text} "
                    f"\n💬 Свяжитесь с пользователем\n {mention_text} для уточнения деталей")
-            bot.send_message(group_id, text=ads, parse_mode="Markdown")
+            bot.send_message(ads_id, text=ads, parse_mode="Markdown")
             bot.send_message(chat_id,
                              text=f"✅ Ваша реклама успешно отправлена! Ожидайте, администратор свяжется с вами для уточнения деталей.")
             user_states.pop(chat_id)
@@ -307,7 +305,7 @@ def process_message(json_data):
             support = f"Пользователь @{chat_username} id:{chat_id} написал: {message_text}"
             bot.send_message(chat_id, text='📩Ваше сообщение отправлено, ждите ответ.', reply_markup=nazad_markup)
 
-            bot.send_message(group_id, text=support)
+            bot.send_message(ads_id, text=support)
 
         elif user_states.get(chat_id) == "awaiting_photo":
             # user_states.pop(chat_id)
