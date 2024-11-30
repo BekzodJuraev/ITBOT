@@ -19,6 +19,7 @@ admin=202053300
 
 user_states = {}
 user_photo={}
+user_text={}
 request = Request(connect_timeout=20, read_timeout=20)
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4",request=request)
 
@@ -180,7 +181,7 @@ def fetch_active(chat_id):
 
     return active
 def process_message(json_data):
-    global saved_photo,price,description,city,phone,call,user_photo
+    global saved_photo,price,description,city,phone,call,user_photo,user_text
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
     message=json_data['message']
@@ -385,7 +386,9 @@ def process_message(json_data):
                 else:
                     saved_photo[:] = saved_photo[:10]
                     media_group = [
-                        InputMediaPhoto(media=file_id) for file_id in saved_photo
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(text) if i == 0 else None,
+                                        parse_mode='HTML')
+                        for i, file_id in enumerate(saved_photo)
                     ]
                     bot.send_media_group(
                         chat_id=chat_id,
@@ -393,6 +396,7 @@ def process_message(json_data):
                     )
                     random_key = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
                     user_photo[random_key] = saved_photo
+                    user_text[random_key]=text
                     # print(user_photo)
 
                     approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}#{random_key}')],
@@ -402,9 +406,8 @@ def process_message(json_data):
                     #                      parse_mode='HTML')
                     bot.send_message(
                         chat_id=chat_id,
-                        text=add_b_tags(text),
+                        text='👆🏻Пост выше👆🏻',
                         reply_markup=approve_markup,
-                        parse_mode='HTML'  # Your inline keyboard here
                     )
 
                 # bot.send_media_group(chat_id,caption=add_b_tags(text),photo=saved_photo,reply_markup=approve_markup,parse_mode='HTML')
@@ -554,7 +557,7 @@ def generate_category_keyboard_all(chat_id):
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo,user_text
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
 
@@ -1117,14 +1120,15 @@ def process_callback_query(json_data):
             if random_key:
 
                 media_group = [
-                    InputMediaPhoto(media=file_id) for file_id in user_photo[random_key]
+                    InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key]) if i == 0 else None,
+                                    parse_mode='HTML')
+                    for i, file_id in enumerate(user_photo[random_key])
                 ]
                 bot.send_media_group(
                     chat_id=group_id,
                     media=media_group,
                 )
-                bot.send_message(group_id, text=add_b_tags(query['message']['text']), reply_markup=approve_admin_markup,
-                                 parse_mode='HTML')
+                bot.send_message(group_id, text='👆🏻Пост выше👆🏻', reply_markup=approve_admin_markup)
             else:
                 bot.send_message(group_id, text=add_b_tags(query['message']['text']), reply_markup=approve_admin_markup,
                                  parse_mode='HTML')
@@ -1166,17 +1170,16 @@ def process_callback_query(json_data):
             else:
                 if random_key:
                     media_group = [
-                        InputMediaPhoto(media=file_id, caption=add_b_tags(query['message']['text']) if i == 0 else None,
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key]) if i == 0 else None,
                                         parse_mode='HTML')
                         for i, file_id in enumerate(user_photo[random_key])
                     ]
 
                     sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
                     sent_message = sent_message[0]  # The first message in the media group
-
+                    text = user_text[random_key]
                     user_photo.pop(random_key)
-
-                    text = query['message']['text']
+                    user_text.pop(random_key)
                 else:
                     sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']),
                                                     parse_mode='HTML')
@@ -1190,19 +1193,25 @@ def process_callback_query(json_data):
             else:
                 if random_key:
                     media_group = [
-                        InputMediaPhoto(media=file_id, caption=add_b_tags(query['message']['text']) if i == 0 else None, parse_mode='HTML')
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key]) if i == 0 else None, parse_mode='HTML')
                         for i, file_id in enumerate(user_photo[random_key])
                     ]
 
-                    sent_message=bot.send_media_group(chat_id=main_id, media=media_group)
-                    sent_message = sent_message[0]  # The first message in the media group
 
+                    sent_message=bot.send_media_group(chat_id=main_id, media=media_group)
+                    sent_message = sent_message[0]
+                    bron_pub = [[InlineKeyboardButton("📝Забронировать", callback_data=f'bron#{sent_message.message_id}')]]
+                    bron_pub_markup = InlineKeyboardMarkup(bron_pub)
+                    bot.send_message(main_id, text='👆🏻Пост выше👆🏻', reply_markup=bron_pub_markup)
+                    text = user_text[random_key]
                     user_photo.pop(random_key)
+                    user_text.pop(random_key)
 
 
                     #first_message_id = first_sent_message.message_id
 
-                    text = query['message']['text']
+
+
                 else:
                     sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']), reply_markup=bron_markup, parse_mode='HTML')
                     text = query['message']['text']
@@ -1247,7 +1256,14 @@ def process_callback_query(json_data):
         bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}',disable_web_page_preview=True)
         bot.delete_message(chat_id=group_id, message_id=message_id)
 
-    elif callback_data_message == 'bron':
+    elif callback_data_message.startswith('bron'):
+        id_message=message_id
+        try:
+            id_message=callback_data_message.split('#')[1]
+
+        except:
+            pass
+
         bron_rejecet = [[InlineKeyboardButton("❌Забронировано", callback_data='empty')]]
         bron_rejecet_markup = InlineKeyboardMarkup(bron_rejecet)
         bot.edit_message_reply_markup(
@@ -1257,30 +1273,33 @@ def process_callback_query(json_data):
         )
         name = query.get('from', {}).get('first_name', 'Unknown')
         user=query['from']['id']
-        profile=Posts.objects.filter(message_id=message_id).first()
+        profile=Posts.objects.filter(message_id=id_message).first()
         if profile:
             #user=bot.get_chat(profile.user_id)
             #username = user.username if user.username else user.first_name
             mention_text = f"[{name}](tg://user?id={user})"
-            notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'bron_reject#{message_id}#{user}')]]
+            notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'notify_rejecet#{message_id}#{user}')]]
             notify_rejecet_markup = InlineKeyboardMarkup(notify_rejecet)
 
-            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем {mention_text}. Свяжитесь с ним для уточнения деталей.\n\n  Ссылка на пост:https://t.me/mainbarxolka/{message_id}",reply_markup=notify_rejecet_markup,parse_mode="Markdown",disable_web_page_preview=True)
+            bot.send_message(chat_id=profile.user_id,text=f"📝 Ваше объявление забронировано пользователем {mention_text}. Свяжитесь с ним для уточнения деталей.\n\n  Ссылка на пост:https://t.me/mainbarxolka/{profile.message_id}",reply_markup=notify_rejecet_markup,parse_mode="Markdown",disable_web_page_preview=True)
 
 
 
 
 
 
-    elif callback_data_message.startswith('bron_reject'):
+    elif callback_data_message.startswith('notify_rejecet'):
+
         try:
             id_message = callback_data_message.split('#')[1]
             id_user = callback_data_message.split('#')[2]
+            bron_pub = [[InlineKeyboardButton("📝Забронировать", callback_data=f'bron#{id_message}')]]
+            bron_pub_markup = InlineKeyboardMarkup(bron_pub)
 
             bot.edit_message_reply_markup(
                 chat_id=main_id,
                 message_id=id_message,
-                reply_markup=bron_markup
+                reply_markup=bron_pub_markup
             )
             bot.delete_message(chat_id=id_user, message_id=message_id)
             bot.send_message(chat_id=id_user, text=f"🔓 Кнопка 📝Забронировать снова активирована для вашего объявления.")
