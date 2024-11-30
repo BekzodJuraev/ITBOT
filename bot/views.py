@@ -1305,7 +1305,7 @@ def process_callback_query(json_data):
             bot.send_message(chat_id=id_user, text=f"🔓 Кнопка 📝Забронировать снова активирована для вашего объявления.")
         except Exception as e:
             pass
-            #print(e)
+
 
     elif callback_data_message.startswith('reject'):
         user_id = callback_data_message.split('#')[1]
