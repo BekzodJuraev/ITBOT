@@ -20,6 +20,7 @@ admin=202053300
 user_states = {}
 user_photo={}
 user_text={}
+user_message_id={}
 request = Request(connect_timeout=20, read_timeout=20)
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4",request=request)
 
@@ -181,7 +182,7 @@ def fetch_active(chat_id):
 
     return active
 def process_message(json_data):
-    global saved_photo,price,description,city,phone,call,user_photo,user_text
+    global saved_photo,price,description,city,phone,call,user_photo,user_text,user_message_id
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
     message=json_data['message']
@@ -209,7 +210,7 @@ def process_message(json_data):
 
         text = (f"✨ Привет! Этот бот создан для удобной и быстрой публикации "
                 f"объявлений на канале @ITbarakholka. 🚀 Рад приветствовать тебя, @{chat_username}!")
-        # bot.send_message(chat_id, text, reply_markup=inline_markup)
+
         bot.send_message(chat_id, text, reply_markup=markup_reply)  ##repl=markup_reply
     elif message_text == "💰 Продажа":
         saved_photo = []
@@ -238,12 +239,11 @@ def process_message(json_data):
 
         except Exception as e:
             pass
-            # print(e)
-        # Handle posts action
+
 
     elif message_text == "🔍 Поиск по категориям":
         text = "🔍 Выберите категорию для поиска объявлений"
-        # continue_markup = generate_category_keyboard(chat_id)
+
 
         bot.send_message(chat_id, text=text, reply_markup=top_category_markup)
     elif message_text == "🛠️ Поддержка":
@@ -390,14 +390,16 @@ def process_message(json_data):
                                         parse_mode='HTML')
                         for i, file_id in enumerate(saved_photo)
                     ]
-                    bot.send_media_group(
+                    messages=bot.send_media_group(
                         chat_id=chat_id,
                         media=media_group,
                     )
                     random_key = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
                     user_photo[random_key] = saved_photo
                     user_text[random_key]=text
+                    user_message_id[random_key] = [message.message_id for message in messages]
                     # print(user_photo)
+
 
                     approve = [[InlineKeyboardButton("✅Опубликовать", callback_data=f'approve#{chat_id}#{random_key}')],
                                [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
@@ -557,7 +559,7 @@ def generate_category_keyboard_all(chat_id):
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo,user_text
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo,user_text,user_message_id
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
 
@@ -1115,6 +1117,7 @@ def process_callback_query(json_data):
                 message_id=message_id,
                 reply_markup=nazad_markup
             )
+
         else:
 
             if random_key:
@@ -1124,14 +1127,21 @@ def process_callback_query(json_data):
                                     parse_mode='HTML')
                     for i, file_id in enumerate(user_photo[random_key])
                 ]
-                bot.send_media_group(
+                messages=bot.send_media_group(
                     chat_id=group_id,
                     media=media_group,
                 )
                 bot.send_message(group_id, text='👆🏻Пост выше👆🏻', reply_markup=approve_admin_markup)
+                user_message_id[random_key]=[message.message_id for message in messages]
+
+                for item in user_message_id[random_key]:
+                    bot.delete_message(chat_id,message_id=item)
+
+
             else:
                 bot.send_message(group_id, text=add_b_tags(query['message']['text']), reply_markup=approve_admin_markup,
                                  parse_mode='HTML')
+
             bot.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,
@@ -1199,6 +1209,8 @@ def process_callback_query(json_data):
 
 
                     sent_message=bot.send_media_group(chat_id=main_id, media=media_group)
+
+
                     sent_message = sent_message[0]
                     bron_pub = [[InlineKeyboardButton("📝Забронировать", callback_data=f'bron#{sent_message.message_id}')]]
                     bron_pub_markup = InlineKeyboardMarkup(bron_pub)
