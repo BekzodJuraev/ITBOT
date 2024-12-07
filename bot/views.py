@@ -231,10 +231,26 @@ def process_message(json_data):
             for item in post:
                 delete_post = [[InlineKeyboardButton("❌Удалить", callback_data=f'delete_posts#{item.message_id}')]]
                 delete_post_markup = InlineKeyboardMarkup(delete_post)
-                bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id,
-                                 reply_markup=delete_post_markup)
+                if item.random_key:
+                    media_group = [
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[item.random_key]) if i == 0 else None,
+                                        parse_mode='HTML')
+                        for i, file_id in enumerate(user_photo[item.random_key])
+                    ]
+                    messages = bot.send_media_group(
+                        chat_id=item.user_id,
+                        media=media_group,
+                    )
+                    bot.send_message(item.user_id, text='👆🏻Пост выше👆🏻', reply_markup=delete_post_markup)
+
+                else:
+                    bot.copy_message(item.user_id, from_chat_id=main_id, message_id=item.message_id,
+                                     reply_markup=delete_post_markup)
+
                 bot.send_message(item.user_id, text=f'Ссылка на пост:https://t.me/mainbarxolka/{item.message_id}',
                                  disable_web_page_preview=True)
+
+
 
 
         except Exception as e:
@@ -1180,6 +1196,8 @@ def process_callback_query(json_data):
                 text = query['message'].get('caption', '')
             else:
                 if random_key:
+                    for item in user_message_id[random_key]:
+                        bot.delete_message(group_id, message_id=item)
                     media_group = [
                         InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key]) if i == 0 else None,
                                         parse_mode='HTML')
@@ -1187,10 +1205,11 @@ def process_callback_query(json_data):
                     ]
 
                     sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
+                    user_message_id[sent_message[0].message_id] = [message.message_id for message in sent_message]
                     sent_message = sent_message[0]  # The first message in the media group
                     text = user_text[random_key]
-                    user_photo.pop(random_key)
-                    user_text.pop(random_key)
+                    # user_photo.pop(random_key)
+                    # user_text.pop(random_key)
                 else:
                     sent_message = bot.send_message(main_id, text=add_b_tags(query['message']['text']),
                                                     parse_mode='HTML')
@@ -1214,7 +1233,7 @@ def process_callback_query(json_data):
 
 
                     sent_message=bot.send_media_group(chat_id=main_id, media=media_group)
-                    user_message_id[random_key] = [message.message_id for message in sent_message]
+                    user_message_id[sent_message[0].message_id] = [message.message_id for message in sent_message]
 
 
 
@@ -1268,7 +1287,7 @@ def process_callback_query(json_data):
 
 
 
-        Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod,type=type)
+        Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod,type=type,random_key=random_key or None)
 
 
 
@@ -1368,6 +1387,14 @@ def process_callback_query(json_data):
 
     elif callback_data_message.startswith('delete_posts'):
         delete_message=callback_data_message.split('#')[1]
+        last=0
+        # print(delete_message)
+        # print(user_message_id)
+        # for item in user_message_id[int(delete_message)]:
+        #
+        #     print(item)
+        #     #bot.delete_message(main_id, message_id=item)
+
 
         try:
             if 'photo' in query['message']:
@@ -1383,12 +1410,27 @@ def process_callback_query(json_data):
                     text='❌Этот пост был удалён с канала.'
                 )
 
-            bot.delete_message(main_id, message_id=delete_message)
+
+            try:
+                for item in user_message_id[int(delete_message)]:
+                    bot.delete_message(main_id, message_id=item)
+                    last=item
+            except Exception as e:
+                pass
+
+
+            if last:
+                bot.delete_message(main_id, message_id=last+1)
+            else:
+                bot.delete_message(main_id, message_id=delete_message)
+
+
+
             Posts.objects.filter(message_id=delete_message).delete()
+            user_message_id.pop(int(delete_message))
 
         except Exception as e:
-            pass
-            #print(e)
+            print(e)
     elif callback_data_message == 'statics':
         #member_count=bot.get_chat_member_count(chat_id)
 
