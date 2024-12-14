@@ -313,6 +313,7 @@ def process_message(json_data):
 
             if 'photo' in json_data['message']:
                 if 'media_group_id' in json_data['message']:
+
                     photo = json_data['message']['photo'][-1]
                     saved_photo.append(photo['file_id'])
                     if len(saved_photo) == 1:
@@ -557,7 +558,7 @@ def generate_category_keyboard_all(chat_id):
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo,user_text
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo,user_text,saved_photo
     query = json_data['callback_query']
     chat_id = query['message']['chat']['id']
 
@@ -1005,7 +1006,7 @@ def process_callback_query(json_data):
 
 
 
-
+        saved_photo=[]
         user_states[chat_id] = 'awaiting_photo'
 
     elif callback_data_message == 'sell_skip':
@@ -1275,8 +1276,6 @@ def process_callback_query(json_data):
         user=query['from']['id']
         profile=Posts.objects.filter(message_id=id_message).first()
         if profile:
-            #user=bot.get_chat(profile.user_id)
-            #username = user.username if user.username else user.first_name
             mention_text = f"[{name}](tg://user?id={user})"
             notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'notify_rejecet#{message_id}#{user}')]]
             notify_rejecet_markup = InlineKeyboardMarkup(notify_rejecet)
@@ -1350,6 +1349,7 @@ def process_callback_query(json_data):
 
             bot.delete_message(main_id, message_id=delete_message)
             Posts.objects.filter(message_id=delete_message).delete()
+
 
         except Exception as e:
             pass
