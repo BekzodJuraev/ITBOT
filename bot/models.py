@@ -21,7 +21,9 @@ class Telegram_users(models.Model):
     created_at=models.DateTimeField(auto_now_add=True,null=True)
 
 
-
+class statics(models.Model):
+    static=models.IntegerField(null=True,blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 
 
