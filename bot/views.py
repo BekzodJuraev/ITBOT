@@ -947,19 +947,20 @@ def process_callback_query(json_data):
                 )
             user_selected_category.pop(chat_id)
         except Exception as e:
-
-            pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
-            pc_search_markup = InlineKeyboardMarkup(pc_search)
-            bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text="❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории."
-            )
-            bot.edit_message_reply_markup(
-                chat_id=chat_id,
-                message_id=message_id,
-                reply_markup=pc_search_markup
-            )
+            pass
+            #print(e)
+            # pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
+            # pc_search_markup = InlineKeyboardMarkup(pc_search)
+            # bot.edit_message_text(
+            #     chat_id=chat_id,
+            #     message_id=message_id,
+            #     text="❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории."
+            # )
+            # bot.edit_message_reply_markup(
+            #     chat_id=chat_id,
+            #     message_id=message_id,
+            #     reply_markup=pc_search_markup
+            # )
 
             #print(e)
 
