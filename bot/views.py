@@ -426,7 +426,7 @@ def process_message(json_data):
                     )
                     random_key = ''.join(random.choices(string.ascii_letters + string.digits, k=4))
                     user_photo[random_key] = saved_photo
-                    user_text[random_key]=add_b_tags(text,chat_username,chat_id)
+                    user_text[random_key]=text
                     user_message_id[random_key] = [message.message_id for message in messages]
                     # print(user_photo)
 
@@ -1159,7 +1159,7 @@ def process_callback_query(json_data):
                     bot.delete_message(chat_id,message_id=item)
 
                 media_group = [
-                    InputMediaPhoto(media=file_id, caption=user_text[random_key] if i == 0 else None,
+                    InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key],username,user_id) if i == 0 else None,
                                     parse_mode='HTML')
                     for i, file_id in enumerate(user_photo[random_key])
                 ]
@@ -1244,7 +1244,7 @@ def process_callback_query(json_data):
                     for item in user_message_id[random_key]:
                         bot.delete_message(group_id, message_id=item)
                     media_group = [
-                        InputMediaPhoto(media=file_id, caption=user_text[random_key] if i == 0 else None, parse_mode='HTML')
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key],username,user_id) if i == 0 else None, parse_mode='HTML')
                         for i, file_id in enumerate(user_photo[random_key])
                     ]
 
@@ -1261,6 +1261,7 @@ def process_callback_query(json_data):
                     bron_pub_markup = InlineKeyboardMarkup(bron_pub)
                     bot.send_message(main_id, text='👆🏻Пост выше👆🏻', reply_markup=bron_pub_markup)
                     text = user_text[random_key]
+
                     # user_photo.pop(random_key)
                     # user_text.pop(random_key)
 
@@ -1373,7 +1374,7 @@ def process_callback_query(json_data):
             bot.send_message(chat_id=user_id, text='❌Ваш пост был отклонен администрацией.')
 
             for item in user_message_id[random_key]:
-                bot.delete_message(chat_id, message_id=item)
+                bot.delete_message(group_id, message_id=item)
             bot.delete_message(chat_id=group_id, message_id=message_id)
 
         else:
