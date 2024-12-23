@@ -208,6 +208,7 @@ def process_message(json_data):
             end_markup = InlineKeyboardMarkup(end)
             bot.send_message(user_id,text=f'Ответ от поддержки: {message_text}', reply_markup=end_markup)
     if message_text == '/start':
+
         try:
             Telegram_users.objects.create(user_id=chat_id)
 
@@ -240,9 +241,9 @@ def process_message(json_data):
                 delete_post_markup = InlineKeyboardMarkup(delete_post)
                 if item.random_key:
                     media_group = [
-                        InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[item.random_key]) if i == 0 else None,
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(item.caption,chat_username,chat_id) if i == 0 else None,
                                         parse_mode='HTML')
-                        for i, file_id in enumerate(user_photo[item.random_key])
+                        for i, file_id in enumerate(item.photo)
                     ]
                     messages = bot.send_media_group(
                         chat_id=item.user_id,
@@ -910,7 +911,18 @@ def process_callback_query(json_data):
             if posts:
 
                 for item in posts:
-                    bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
+                    if item.random_key:
+                        username=bot.get_chat(item.user_id).username
+                        media_group = [
+                            InputMediaPhoto(media=file_id, caption=add_b_tags(item.caption,username,item.user_id) if i == 0 else None,
+                                            parse_mode='HTML')
+                            for i, file_id in enumerate(item.photo)
+                        ]
+
+                        sent_message = bot.send_media_group(chat_id=chat_id, media=media_group)
+                    else:
+                        bot.copy_message(chat_id, from_chat_id=main_id, message_id=item.message_id)
+
                     bot.send_message(
                         chat_id,
                         text=f"Ссылка на пост: https://t.me/mainbarxolka/{item.message_id}",
@@ -919,7 +931,7 @@ def process_callback_query(json_data):
 
                     message_count += 1
                     if message_count == 5:
-                        continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='more')],
+                        continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='pc_search')],
                                            [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
                         continue_button_markup = InlineKeyboardMarkup(continue_button)
                         bot.send_message(chat_id,
@@ -1202,6 +1214,7 @@ def process_callback_query(json_data):
     elif callback_data_message.startswith("publish"):
         user_id = callback_data_message.split('#')[1]
         username = bot.get_chat(user_id).username
+        list_id=[]
         random_key = None
         try:
             random_key = callback_data_message.split('#')[2]
@@ -1219,15 +1232,19 @@ def process_callback_query(json_data):
                     for item in user_message_id[random_key]:
                         bot.delete_message(group_id, message_id=item)
                     media_group = [
-                        InputMediaPhoto(media=file_id, caption=user_text[random_key] if i == 0 else None,
+                        InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key],username,user_id) if i == 0 else None,
                                         parse_mode='HTML')
                         for i, file_id in enumerate(user_photo[random_key])
                     ]
 
                     sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
-                    user_message_id[sent_message[0].message_id] = [message.message_id for message in sent_message]
+                    list_id = [message.message_id for message in sent_message]
+
                     sent_message = sent_message[0]  # The first message in the media group
                     text = user_text[random_key]
+
+
+
                     # user_photo.pop(random_key)
                     # user_text.pop(random_key)
                 else:
@@ -1252,8 +1269,9 @@ def process_callback_query(json_data):
 
 
 
+
                     sent_message=bot.send_media_group(chat_id=main_id, media=media_group)
-                    user_message_id[sent_message[0].message_id] = [message.message_id for message in sent_message]
+                    list_id = [message.message_id for message in sent_message]
 
 
 
@@ -1306,14 +1324,28 @@ def process_callback_query(json_data):
             elif line.startswith("Подкатегория:"):
                 pod = line.split(": #")[1]
 
-
-
-        Posts.objects.create(user_id=user_id,message_id=sent_message.message_id,category=category,category_pod=pod,type=type,random_key=random_key or None)
+        Posts.objects.create(
+            user_id=user_id,
+            message_id=sent_message.message_id,
+            category=category,
+            category_pod=pod,
+            type=type,
+            random_key=random_key or None,
+            user_message_id=list_id,
+            caption=user_text.get(random_key, None),
+            photo=user_photo.get(random_key, None)
+        )
 
 
 
         bot.send_message(user_id,text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}',disable_web_page_preview=True)
         bot.delete_message(chat_id=group_id, message_id=message_id)
+        if random_key:
+            user_photo.pop(random_key)
+            user_text.pop(random_key)
+            user_message_id.pop(random_key)
+
+
 
     elif callback_data_message.startswith('bron'):
         id_message=message_id
@@ -1377,6 +1409,10 @@ def process_callback_query(json_data):
             for item in user_message_id[random_key]:
                 bot.delete_message(group_id, message_id=item)
             bot.delete_message(chat_id=group_id, message_id=message_id)
+            user_photo.pop(random_key)
+            user_text.pop(random_key)
+
+
 
         else:
             bot.send_message(chat_id=user_id, text='❌Ваш пост был отклонен администрацией.')
@@ -1431,7 +1467,8 @@ def process_callback_query(json_data):
 
 
             try:
-                for item in user_message_id[int(delete_message)]:
+                posts=Posts.objects.filter(message_id=delete_message).first()
+                for item in posts.user_message_id:
                     bot.delete_message(main_id, message_id=item)
                     last=item
             except Exception as e:
@@ -1446,7 +1483,7 @@ def process_callback_query(json_data):
 
 
             Posts.objects.filter(message_id=delete_message).delete()
-            user_message_id.pop(int(delete_message))
+
 
 
         except Exception as e:
