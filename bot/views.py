@@ -913,9 +913,25 @@ def process_callback_query(json_data):
 
 
             message_count = 0
+            if count == len(posts):
+                pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
+                pc_search_markup = InlineKeyboardMarkup(pc_search)
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text="❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории."
+                )
+                bot.edit_message_reply_markup(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    reply_markup=pc_search_markup
+                )
+                return
 
 
             if posts:
+
+
                 for item in range(count,len(posts)):
                     item=posts[item]
                     if item.random_key:
@@ -946,9 +962,11 @@ def process_callback_query(json_data):
                         bot.send_message(chat_id,
                                          text='Показаны посты, подходящих под выбранные категории. Чтобы увидеть больше, нажмите кнопку «⬇️Показать ещё».',
                                          reply_markup=continue_button_markup)
+                        message_count=0
 
 
                         break
+
                 if message_count != 0:
                     bot.send_message(chat_id,text='❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории.')
 
@@ -968,8 +986,7 @@ def process_callback_query(json_data):
                 )
             #user_selected_category.pop(chat_id)
         except Exception as e:
-            #pass
-            print(e)
+            pass
             # pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
             # pc_search_markup = InlineKeyboardMarkup(pc_search)
             # bot.edit_message_text(
