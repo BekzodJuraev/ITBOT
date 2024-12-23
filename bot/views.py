@@ -882,7 +882,13 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=continue_markup
         )
-    elif callback_data_message == "pc_search":
+    elif callback_data_message.startswith('pc_search'):
+        try:
+            count=int(callback_data_message.split('#')[1])
+        except:
+            count=0
+
+
         try:
             mode=None
             if user_selected_mode[chat_id] == 'sell':
@@ -908,9 +914,10 @@ def process_callback_query(json_data):
 
             message_count = 0
 
-            if posts:
 
-                for item in posts:
+            if posts:
+                for item in range(count,len(posts)):
+                    item=posts[item]
                     if item.random_key:
                         username=bot.get_chat(item.user_id).username
                         media_group = [
@@ -931,13 +938,15 @@ def process_callback_query(json_data):
 
                     message_count += 1
                     if message_count == 5:
-                        continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data='pc_search')],
+                        count+= message_count
+
+                        continue_button = [[InlineKeyboardButton("⬇️Показать ещё", callback_data=f'pc_search#{count}')],
                                            [InlineKeyboardButton("🔙Меню", callback_data='nazad')]]
                         continue_button_markup = InlineKeyboardMarkup(continue_button)
                         bot.send_message(chat_id,
                                          text='Показаны посты, подходящих под выбранные категории. Чтобы увидеть больше, нажмите кнопку «⬇️Показать ещё».',
                                          reply_markup=continue_button_markup)
-                        message_count = 0
+
 
                         break
                 if message_count != 0:
@@ -957,10 +966,10 @@ def process_callback_query(json_data):
                     message_id=message_id,
                     reply_markup=pc_search_markup
                 )
-            user_selected_category.pop(chat_id)
+            #user_selected_category.pop(chat_id)
         except Exception as e:
-            pass
-            #print(e)
+            #pass
+            print(e)
             # pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
             # pc_search_markup = InlineKeyboardMarkup(pc_search)
             # bot.edit_message_text(
