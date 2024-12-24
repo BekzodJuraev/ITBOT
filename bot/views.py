@@ -926,6 +926,7 @@ def process_callback_query(json_data):
                     message_id=message_id,
                     reply_markup=pc_search_markup
                 )
+                user_selected_category.pop(chat_id)
                 return
 
 
@@ -984,7 +985,7 @@ def process_callback_query(json_data):
                     message_id=message_id,
                     reply_markup=pc_search_markup
                 )
-            #user_selected_category.pop(chat_id)
+            user_selected_category.pop(chat_id)
         except Exception as e:
             pass
             # pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
