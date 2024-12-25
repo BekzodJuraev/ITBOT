@@ -21,7 +21,7 @@ user_states = {}
 user_photo={}
 user_text={}
 user_message_id={}
-request = Request(connect_timeout=20, read_timeout=20)
+request = Request(connect_timeout=35, read_timeout=35)
 bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4",request=request)
 
 
@@ -429,6 +429,7 @@ def process_message(json_data):
                     user_photo[random_key] = saved_photo
                     user_text[random_key]=text
                     user_message_id[random_key] = [message.message_id for message in messages]
+
                     # print(user_photo)
 
 
@@ -590,7 +591,7 @@ def generate_category_keyboard_all(chat_id):
 
 
 def process_callback_query(json_data):
-    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo,user_text,saved_photo
+    global skip_catergory,skip_pod_category,skip_pod_pod_category,call,user_selected_category,user_selected_mode,user_photo,user_text,saved_photo,user_message_id
 
 
     query = json_data['callback_query']
