@@ -11,18 +11,18 @@ import re
 from telegram.utils.request import Request
 from .models import Posts,Telegram_users,statics
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton,WebAppInfo,InputMediaPhoto
-
-main_id=-1002373097450
-group_id=-1002437770225
-ads_id=-4709784527
-admin=202053300
+from config import TOKEN_BOT,CHANEL_ADS,CHANEL_MAIN,CHANEL_SUPPORT,ADMIN
+main_id=CHANEL_MAIN
+group_id=CHANEL_SUPPORT
+ads_id=CHANEL_ADS
+admin=ADMIN
 
 user_states = {}
 user_photo={}
 user_text={}
 user_message_id={}
 request = Request(connect_timeout=20, read_timeout=20)
-bot = telegram.Bot("7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4",request=request)
+bot = telegram.Bot(TOKEN_BOT,request=request)
 
 
 

@@ -1,11 +1,12 @@
 from aiogram import Bot, Dispatcher, executor
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 import logging
+from config import TOKEN_BOT,DOMAIN
+#ngrok_url = 'https://eb6a-213-230-87-48.ngrok-free.app/telegram_webhook/'
+ngrok_url = f"{DOMAIN}/telegram_webhook/"
 
-#ngrok_url = 'https://itbarxolka.zapto.org/telegram_webhook/'
-ngrok_url = 'https://891a-213-230-87-162.ngrok-free.app/telegram_webhook/'
 
-bot = Bot(token="7677882278:AAHiw2W0wxkrBZmJEj12DwQryxgR3qucWZ4")
+bot = Bot(token=TOKEN_BOT)
 
 dp = Dispatcher(bot)
 
