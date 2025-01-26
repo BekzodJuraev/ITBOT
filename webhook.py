@@ -4,7 +4,7 @@ import logging
 from config import TOKEN_BOT,DOMAIN
 #ngrok_url = 'https://eb6a-213-230-87-48.ngrok-free.app/telegram_webhook/'
 ngrok_url = f"{DOMAIN}/telegram_webhook/"
-
+#TOKEN_BOT="5135151315:AAHypfMOijVW2fE5SM4iQr8LB3bCn0yaS7Q"
 
 bot = Bot(token=TOKEN_BOT)
 
@@ -20,7 +20,6 @@ async def set_webhook(dispatcher):
     try:
         webhook_url = f"{ngrok_url}"
         await bot.set_webhook(webhook_url)
-
         logging.info(f"Webhook set to {webhook_url}")
     except Exception as e:
         logging.error(f"Failed to set webhook: {e}")
