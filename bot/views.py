@@ -135,17 +135,17 @@ pk_cat_inline=[
 ]
 pk_cat_inline_markup=InlineKeyboardMarkup(pk_cat_inline)
 items_cat_inline=[
-    [InlineKeyboardButton("Мониторы", callback_data='items_pod#Мониторы')],
-    [InlineKeyboardButton("Клавиатуры_и_мыши", callback_data='items_pod#Клавиатуры_и_мыши')],
-    [InlineKeyboardButton("Акссесуары", callback_data='items_pod#Акссесуары')],
+    [InlineKeyboardButton("Мониторы", callback_data='monitor#Мониторы')],
+    [InlineKeyboardButton("Клавиатуры_и_мыши", callback_data='keyboard#Клавиатуры_и_мыши')],
+    [InlineKeyboardButton("Акссесуары", callback_data='aksessuar#Акссесуары')],
     [InlineKeyboardButton("🔙Назад", callback_data='sell_skip')],
 ]
 items_cat_inline_markup=InlineKeyboardMarkup(items_cat_inline)
 
 server_cat_inline=[
-    [InlineKeyboardButton("Серверы", callback_data='server_pod#Серверы')],
-    [InlineKeyboardButton("Жёсткие_диски", callback_data='server_pod#Жёсткие_диски')],
-    [InlineKeyboardButton("Процессоры", callback_data='server_pod#Процессоры')],
+    [InlineKeyboardButton("Серверы", callback_data='switch#Серверы')],
+    [InlineKeyboardButton("Жёсткие_диски", callback_data='hard#Жёсткие_диски')],
+    [InlineKeyboardButton("Процессоры", callback_data='processor#Процессоры')],
     [InlineKeyboardButton("🔙Назад", callback_data='sell_skip')],
 ]
 server_cat_inline_markup=InlineKeyboardMarkup(server_cat_inline)
@@ -192,6 +192,78 @@ planshet_pod_pod=[
     [InlineKeyboardButton("🔙Назад", callback_data='pk')],
 ]
 planshet_pod_pod_markup=InlineKeyboardMarkup(planshet_pod_pod)
+
+#############################
+monitor_pod_pod=[
+    [InlineKeyboardButton("msi_monitor", callback_data='skip#msi_monitor')],
+    [InlineKeyboardButton("hp_monitor", callback_data='skip#hp_monitor')],
+    [InlineKeyboardButton("lenovo_monitor", callback_data='skip#lenovo_monitor')],
+    [InlineKeyboardButton("➡️Пропустить", callback_data='skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='items')],
+]
+monitor_pod_pod_markup=InlineKeyboardMarkup(monitor_pod_pod)
+keyboard_pod_pod=[
+    [InlineKeyboardButton("msi_klava", callback_data='skip#msi_klava')],
+    [InlineKeyboardButton("hp_klava", callback_data='skip#hp_klava')],
+    [InlineKeyboardButton("lenovo_klava", callback_data='skip#lenovo_klava')],
+    [InlineKeyboardButton("➡️Пропустить", callback_data='skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='items')],
+]
+keyboard_pod_pod_markup=InlineKeyboardMarkup(keyboard_pod_pod)
+aksessuar_pod_pod=[
+    [InlineKeyboardButton("msi_acses", callback_data='skip#msi_acses')],
+    [InlineKeyboardButton("hp_acses", callback_data='skip#hp_acses')],
+    [InlineKeyboardButton("lenovo_acses", callback_data='skip#lenovo_acses')],
+    [InlineKeyboardButton("➡️Пропустить", callback_data='skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='items')],
+]
+aksessuar_pod_pod_markup=InlineKeyboardMarkup(aksessuar_pod_pod)
+
+#######################################
+server_pod_pod=[
+    [InlineKeyboardButton("msi_server", callback_data='skip#msi_server')],
+    [InlineKeyboardButton("hp_server", callback_data='skip#hp_server')],
+    [InlineKeyboardButton("lenovo_server", callback_data='skip#lenovo_server')],
+    [InlineKeyboardButton("➡️Пропустить", callback_data='skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='server')],
+]
+server_pod_pod_markup=InlineKeyboardMarkup(server_pod_pod)
+hard_pod_pod=[
+    [InlineKeyboardButton("msi_hdd", callback_data='skip#msi_hdd')],
+    [InlineKeyboardButton("hp_hdd", callback_data='skip#hp_hdd')],
+    [InlineKeyboardButton("lenovo_hdd", callback_data='skip#lenovo_hdd')],
+    [InlineKeyboardButton("➡️Пропустить", callback_data='skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='server')],
+]
+hard_pod_pod_markup=InlineKeyboardMarkup(hard_pod_pod)
+proccessor_pod_pod=[
+    [InlineKeyboardButton("msi_proc", callback_data='skip#msi_proc')],
+    [InlineKeyboardButton("hp_proc", callback_data='skip#hp_proc')],
+    [InlineKeyboardButton("lenovo_proc", callback_data='skip#lenovo_proc')],
+    [InlineKeyboardButton("➡️Пропустить", callback_data='skip')],
+    [InlineKeyboardButton("🔙Назад", callback_data='server')],
+]
+proccessor_pod_pod_markup=InlineKeyboardMarkup(proccessor_pod_pod)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#####################################
 sell_skip_pod_category = [
     [InlineKeyboardButton("🤖Android", callback_data='skip#android')],
     [InlineKeyboardButton("🍎Apple", callback_data='skip#apple')],
@@ -200,8 +272,25 @@ sell_skip_pod_category = [
 ]
 sell_skip_pod_category_markup = InlineKeyboardMarkup(sell_skip_pod_category)
 
+##############################################################################
 
-
+search_pod_pc=[
+    [InlineKeyboardButton("Стационарные_ПК", callback_data='#')],
+    [InlineKeyboardButton("Ноутбуки", callback_data='#')],
+    [InlineKeyboardButton("Моноблоки", callback_data='#')],
+    [InlineKeyboardButton("Планшеты", callback_data='#')],
+]
+search_pod_items=[
+    [InlineKeyboardButton("Мониторы", callback_data='#')],
+    [InlineKeyboardButton("Клавиатуры_и_мыши", callback_data='#')],
+    [InlineKeyboardButton("Акссесуары", callback_data='#')],
+    [InlineKeyboardButton("Планшеты", callback_data='#')],
+]
+search_pod_server=[
+    [InlineKeyboardButton("Серверы", callback_data='#')],
+    [InlineKeyboardButton("Жёсткие_диски", callback_data='#')],
+    [InlineKeyboardButton("Процессоры ", callback_data='#')],
+]
 text_category = "🔍Выберите категорию вашего товара."
 
 text_sell = "📸 Пожалуйста, отправьте фото. Не более 10 штук."
@@ -856,12 +945,42 @@ def process_callback_query(json_data):
         )
 
     elif callback_data_message == 'pc_go':
-        continue_button = [[InlineKeyboardButton("test", callback_data='pc_test')],
-                           [InlineKeyboardButton("Все", callback_data='pc_test')],
-                           [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
-                           [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
-                           [InlineKeyboardButton("🔙Назад", callback_data='category')]]
-        continue_markup = InlineKeyboardMarkup(continue_button)
+        list_pod=[]
+        search_pod_pc = [
+            [InlineKeyboardButton("Стационарные_ПК", callback_data='#')],
+            [InlineKeyboardButton("Ноутбуки", callback_data='#')],
+            [InlineKeyboardButton("Моноблоки", callback_data='#')],
+            [InlineKeyboardButton("Планшеты", callback_data='#')],
+        ]
+        search_pod_items = [
+            [InlineKeyboardButton("Мониторы", callback_data='#')],
+            [InlineKeyboardButton("Клавиатуры_и_мыши", callback_data='#')],
+            [InlineKeyboardButton("Акссесуары", callback_data='#')],
+            [InlineKeyboardButton("Планшеты", callback_data='#')],
+        ]
+        search_pod_server = [
+            [InlineKeyboardButton("Серверы", callback_data='#')],
+            [InlineKeyboardButton("Жёсткие_диски", callback_data='#')],
+            [InlineKeyboardButton("Процессоры ", callback_data='#')],
+        ]
+
+
+        selected_categories = user_selected_category.get(chat_id)
+        if 'pc' in selected_categories:
+            list_pod.extend(search_pod_pc)
+        if 'pc_server' in selected_categories:
+            list_pod.extend(search_pod_server)
+        if 'pc_comp' in selected_categories:
+            list_pod.extend(search_pod_server)
+
+        list_pod.extend([
+            [InlineKeyboardButton("Все", callback_data='pc_test')],
+            [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
+            [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+            [InlineKeyboardButton("🔙Назад", callback_data='category')]
+        ])
+
+        continue_markup = InlineKeyboardMarkup(list_pod)
 
         bot.edit_message_text(
             chat_id=chat_id,
@@ -1285,6 +1404,114 @@ def process_callback_query(json_data):
             chat_id=chat_id,
             message_id=message_id,
             reply_markup=monoblock_pod_pod_markup
+        )
+    elif callback_data_message.startswith("aksessuar"):
+        try:
+            skip_pod_category = callback_data_message.split('#')[1]
+
+        except:
+            pass
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍Выберите подподкатегорию вашего товара."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=aksessuar_pod_pod_markup
+        )
+    elif callback_data_message.startswith("monitor"):
+        try:
+            skip_pod_category = callback_data_message.split('#')[1]
+
+        except:
+            pass
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍Выберите подподкатегорию вашего товара."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=monitor_pod_pod_markup
+        )
+    elif callback_data_message.startswith("keyboard"):
+        try:
+            skip_pod_category = callback_data_message.split('#')[1]
+
+        except:
+            pass
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍Выберите подподкатегорию вашего товара."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=keyboard_pod_pod_markup
+        )
+    elif callback_data_message.startswith("switch"):
+        try:
+            skip_pod_category = callback_data_message.split('#')[1]
+
+        except:
+            pass
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍Выберите подподкатегорию вашего товара."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=server_pod_pod_markup
+        )
+    elif callback_data_message.startswith("hard"):
+        try:
+            skip_pod_category = callback_data_message.split('#')[1]
+
+        except:
+            pass
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍Выберите подподкатегорию вашего товара."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=hard_pod_pod_markup
+        )
+    elif callback_data_message.startswith("processor"):
+        try:
+            skip_pod_category = callback_data_message.split('#')[1]
+
+        except:
+            pass
+
+        bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text="🔍Выберите подподкатегорию вашего товара."
+        )
+
+        bot.edit_message_reply_markup(
+            chat_id=chat_id,
+            message_id=message_id,
+            reply_markup=proccessor_pod_pod_markup
         )
     elif callback_data_message.startswith('skip'):
         try:
