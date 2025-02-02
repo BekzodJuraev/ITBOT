@@ -32,7 +32,7 @@ def add_b_tags(text, username='username', chat_id='1'):
     if username == None:
         username = 'username'
     labels = [
-        "Тип", "Категория", "Подкатегория", "Пользователь", "Описание",
+        "Тип", "Категория", "Подкатегория","Подподкатегория", "Пользователь", "Описание",
         "Контакты", "Цена", "Город", "Автор", "Отправлено через", 'Айди'
     ]
 
@@ -540,7 +540,7 @@ def process_message(json_data):
                 f"Тип: #{'Продажа' if call == 'sell' else 'Покупка'}\n\n"
                 f"Категория: #{skip_catergory}\n"
                 f"Подкатегория: #{skip_pod_category}\n"
-                f"Подкатегория: #{skip_pod_pod_category}\n"
+                f"Подподкатегория: #{skip_pod_pod_category}\n"
                 f"Пользователь: #user{user.id}\n"
                 f"Айди: {chat_id}\n\n"
                 f"Описание: {description}\n\n"
