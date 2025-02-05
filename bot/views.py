@@ -27,7 +27,6 @@ user_message_id = {}
 request = Request(connect_timeout=35, read_timeout=35)
 bot = telegram.Bot(TOKEN_BOT, request=request)
 
-
 def add_b_tags(text, username='username', chat_id='1'):
     if username == None:
         username = 'username'
@@ -116,12 +115,7 @@ markup_reply = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 sell_skip = [
     [InlineKeyboardButton("💻ПК", callback_data='pk#ПК')],
     [InlineKeyboardButton("🖥️Товары для компьютера", callback_data='items#Товары_для_компьютера')],
-    [InlineKeyboardButton("🛠️Комплектующие для компьютера", callback_data='cat#Комплектующие_для_компьютера')],
     [InlineKeyboardButton("🖧Серверное оборудование", callback_data='server#Серверное_оборудование')],
-    [InlineKeyboardButton("🌐Сетевое оборудование", callback_data='cat#Сетевое_оборудование')],
-    [InlineKeyboardButton("🖨️Офисная техника и расходники", callback_data='cat#Офисная_техника_и_расходники')],
-    [InlineKeyboardButton("📱Телефоны", callback_data='cat#Телефоны')],
-    [InlineKeyboardButton("💿Программное обеспечение", callback_data='cat#Программное_обеспечение')],
     [InlineKeyboardButton("🔙Назад", callback_data='sell')],
 
 ]
@@ -151,14 +145,7 @@ server_cat_inline=[
 server_cat_inline_markup=InlineKeyboardMarkup(server_cat_inline)
 
 
-sell_skip_pod = [
-    [InlineKeyboardButton("🖥️Стационарные ПК", callback_data='pod#Стационарные_ПК')],
-    [InlineKeyboardButton("💻Ноутбуки", callback_data='pod#Ноутбуки')],
-    [InlineKeyboardButton("🖨️Моноблоки", callback_data='pod#Моноблоки')],
-    [InlineKeyboardButton("📱Планшеты", callback_data='pod#Планшеты')],
-    [InlineKeyboardButton("🔙Назад", callback_data='sell_skip')],
-]
-sell_skip_pod_markup = InlineKeyboardMarkup(sell_skip_pod)
+
 
 pk_pod_pod=[
     [InlineKeyboardButton("msi_pk", callback_data='skip#msi_pk')],
@@ -263,34 +250,12 @@ proccessor_pod_pod_markup=InlineKeyboardMarkup(proccessor_pod_pod)
 
 
 
-#####################################
-sell_skip_pod_category = [
-    [InlineKeyboardButton("🤖Android", callback_data='skip#android')],
-    [InlineKeyboardButton("🍎Apple", callback_data='skip#apple')],
-    [InlineKeyboardButton("➡️Пропустить", callback_data='skip')],
-    [InlineKeyboardButton("🔙Назад", callback_data='cat')],
-]
-sell_skip_pod_category_markup = InlineKeyboardMarkup(sell_skip_pod_category)
+
+
 
 ##############################################################################
 
-search_pod_pc=[
-    [InlineKeyboardButton("Стационарные_ПК", callback_data='#')],
-    [InlineKeyboardButton("Ноутбуки", callback_data='#')],
-    [InlineKeyboardButton("Моноблоки", callback_data='#')],
-    [InlineKeyboardButton("Планшеты", callback_data='#')],
-]
-search_pod_items=[
-    [InlineKeyboardButton("Мониторы", callback_data='#')],
-    [InlineKeyboardButton("Клавиатуры_и_мыши", callback_data='#')],
-    [InlineKeyboardButton("Акссесуары", callback_data='#')],
-    [InlineKeyboardButton("Планшеты", callback_data='#')],
-]
-search_pod_server=[
-    [InlineKeyboardButton("Серверы", callback_data='#')],
-    [InlineKeyboardButton("Жёсткие_диски", callback_data='#')],
-    [InlineKeyboardButton("Процессоры ", callback_data='#')],
-]
+
 text_category = "🔍Выберите категорию вашего товара."
 
 text_sell = "📸 Пожалуйста, отправьте фото. Не более 10 штук."
@@ -298,7 +263,7 @@ sell = [[InlineKeyboardButton("➡️Пропустить", callback_data='sell_
         [InlineKeyboardButton("🔙Назад", callback_data='nazad')]]
 sell_markup = InlineKeyboardMarkup(sell)
 
-nazad_description = [[InlineKeyboardButton("🔙Назад", callback_data='pod')]]
+nazad_description = [[InlineKeyboardButton("🔙Назад", callback_data='sell_skip')]]
 nazad_description_markup = InlineKeyboardMarkup(nazad_description)
 awaiting_description = [[InlineKeyboardButton("🔙Назад", callback_data='awaiting_description')]]
 awaiting_description_markup = InlineKeyboardMarkup(awaiting_description)
@@ -655,36 +620,37 @@ def process_message(json_data):
 user_selected_category = {}
 user_selected_category_go = {}
 user_selected_mode = {}
-
-
+user_selected_subcategories = {}
+ALL_SUBCATEGORIES = {
+    "Стационарные_ПК", "Ноутбуки", "Моноблоки", "Планшеты",
+    "Мониторы", "Клавиатуры_и_мыши", "Аксессуары", "Планшеты",
+    "Серверы", "Жёсткие_диски", "Процессоры"
+}
 def generate_category_keyboard(chat_id):
     global user_selected_category
+    ########### поиск
     categories = [
-        ("ПК", 'pc'),
-        ("Товары для компьютера", 'pc_comp'),
-        ("Комплектующие для компьютера", 'pc_comp1'),
-        ("Серверное оборудование", 'pc_server'),
-        ("Сетевое оборудование", 'pc_network'),
-        ("Офисная техника и расходники", 'pc_office'),
-        ("Телефоны", 'pc_phone'),
-        ("Программное обеспечение", 'pf_software'),
+        ("ПК", 'ПК'),
+        ("Товары для компьютера", 'Товары_для_компьютера'),
+        ("Серверное оборудование", 'Серверное_оборудование'),
+
     ]
 
     continue_key = []
 
     for category_name, callback_value in categories:
-        # If the category is selected, add a ✅ next to it
+
         if chat_id in user_selected_category and callback_value in user_selected_category.get(chat_id):
-            category_button = InlineKeyboardButton(f"✅ {category_name}", callback_data=callback_value)
+            category_button = InlineKeyboardButton(f"✅ {category_name}", callback_data=f"click_{callback_value}")
         else:
-            category_button = InlineKeyboardButton(category_name, callback_data=callback_value)
+            category_button = InlineKeyboardButton(category_name, callback_data=f"click_{callback_value}")
 
         continue_key.append([category_button])
 
-    # Add buttons for "Продолжить", "Искать", and "Назад"
+
     continue_key.extend([
         [InlineKeyboardButton("Все", callback_data='pc_all')],
-        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_go')],
+        [InlineKeyboardButton("➡️Продолжить", callback_data='toggle_')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],  # pc_search
         [InlineKeyboardButton("🔙Назад", callback_data='back_top')],
     ])
@@ -694,21 +660,18 @@ def generate_category_keyboard(chat_id):
 
 def generate_category_keyboard_all(chat_id):
     global user_selected_category, user_selected_mode
+    #### поиск
     categories = [
-        ("ПК", 'pc'),
-        ("Товары для компьютера", 'pc_comp'),
-        ("Комплектующие для компьютера", 'pc_comp1'),
-        ("Серверное оборудование", 'pc_server'),
-        ("Сетевое оборудование", 'pc_network'),
-        ("Офисная техника и расходники", 'pc_office'),
-        ("Телефоны", 'pc_phone'),
-        ("Программное обеспечение", 'pf_software'),
+        ("ПК", 'ПК'),
+        ("Товары для компьютера", 'Товары_для_компьютера'),
+        ("Серверное оборудование", 'Серверное_оборудование'),
+
     ]
 
     continue_key = []
 
     for category_name, callback_value in categories:
-        category_button = InlineKeyboardButton(f"✅ {category_name}", callback_data=callback_value)
+        category_button = InlineKeyboardButton(f"✅ {category_name}", callback_data=f"click_{callback_value}")
         continue_key.append([category_button])
 
         if chat_id not in user_selected_category:
@@ -722,13 +685,63 @@ def generate_category_keyboard_all(chat_id):
     # Add buttons for "Продолжить", "Искать", and "Назад"
     continue_key.extend([
         [InlineKeyboardButton("Все", callback_data='pc_all')],
-        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_go')],
+        [InlineKeyboardButton("➡️Продолжить", callback_data='toggle_')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],  # pc_search
         [InlineKeyboardButton("🔙Назад", callback_data=f'back_top')],
     ])
 
     return InlineKeyboardMarkup(continue_key)
 
+
+def generate_category_keyboard_subcat(chat_id):
+    selected = user_selected_subcategories.get(chat_id, set())
+
+
+    def get_button(text, category):
+        icon = "✅ " if category in selected else ""
+        return InlineKeyboardButton(f"{icon}{text}", callback_data=f"toggle_{category}")
+
+    search_pod_pc = [
+        [get_button("Стационарные_ПК", "Стационарные_ПК")],
+        [get_button("Ноутбуки", "Ноутбуки")],
+        [get_button("Моноблоки", "Моноблоки")],
+        [get_button("Планшеты", "Планшеты")]
+    ]
+
+    search_pod_items = [
+        [get_button("Мониторы", "Мониторы")],
+        [get_button("Клавиатуры_и_мыши", "Клавиатуры_и_мыши")],
+        [get_button("Аксессуары", "Аксессуары")],
+        [get_button("Планшеты", "Планшеты")]
+    ]
+
+    search_pod_server = [
+        [get_button("Серверы", "Серверы")],
+        [get_button("Жёсткие_диски", "Жёсткие_диски")],
+        [get_button("Процессоры", "Процессоры")]
+    ]
+
+    list_pod = []
+
+    # Add relevant subcategories
+    selected_categories = user_selected_category.get(chat_id, set())
+    if 'ПК' in selected_categories:
+        list_pod.extend(search_pod_pc)
+    if 'Серверное_оборудование' in selected_categories:
+        list_pod.extend(search_pod_server)
+    if 'Товары_для_компьютера' in selected_categories:
+        list_pod.extend(search_pod_items)
+
+
+    list_pod.append([InlineKeyboardButton(f"Все", callback_data='pc_test')])
+    # Add control buttons
+    list_pod.extend([
+        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
+        [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
+        [InlineKeyboardButton("🔙Назад", callback_data='category')]
+    ])
+
+    return InlineKeyboardMarkup(list_pod)
 
 def process_callback_query(json_data):
     global skip_catergory, skip_pod_category, skip_pod_pod_category, call, user_selected_category, user_selected_mode, user_photo, user_text, saved_photo, user_message_id
@@ -813,43 +826,7 @@ def process_callback_query(json_data):
             reply_markup=top_category_markup
         )
 
-        # bot.edit_message_text(
-        #     chat_id=chat_id,
-        #     message_id=message_id,
-        #     text="Меню:"  # Update the message text
-        # )
-        #
-        # bot.edit_message_reply_markup(
-        #     chat_id=chat_id,
-        #     message_id=query['message']['message_id'],
-        #     reply_markup=inline_markup
-        # )
 
-    # elif callback_data_message == "pc_continue":
-    #
-    #     pc_continue = [
-    #         [InlineKeyboardButton("Стационарные ПК", callback_data='pc_desktop')],
-    #         [InlineKeyboardButton("Ноутбуки", callback_data='pc_laptop')],
-    #         [InlineKeyboardButton("Моноблоки", callback_data='pc_desktop')],
-    #         [InlineKeyboardButton("Планшеты", callback_data='pc_monoblock')],
-    #         [InlineKeyboardButton("➡️Продолжить", callback_data='pc_post')],
-    #         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
-    #         [InlineKeyboardButton("🔙Назад", callback_data='category')],
-    #
-    #     ]
-    #     pc_continue_markup = InlineKeyboardMarkup(pc_continue)
-    #
-    #     bot.edit_message_text(
-    #         chat_id=chat_id,
-    #         message_id=message_id,
-    #         text="🔽 Выберите подкатегорию, отмечая её галочкой ✅. Или же, можете пропустить этот шаг и просто нажать «➡️Продолжить» ."
-    #     )
-    #
-    #     bot.edit_message_reply_markup(
-    #         chat_id=chat_id,
-    #         message_id=query['message']['message_id'],
-    #         reply_markup=pc_continue_markup
-    #     )
     elif callback_data_message.startswith('block'):
         user = callback_data_message.split('#')[1]
 
@@ -916,9 +893,9 @@ def process_callback_query(json_data):
 
 
 
-    elif callback_data_message in ['pc', 'pc_comp', 'pc_comp1', 'pc_network', 'pc_office', 'pc_phone', 'pf_software',
-                                   'pc_server']:
-        selected_category = callback_data_message
+    elif callback_data_message.startswith("click_"):  ###### поиск
+        selected_category = callback_data_message.replace("click_", "")
+
 
         if chat_id in user_selected_category and selected_category in user_selected_category.get(chat_id):
             user_selected_category[chat_id].remove(selected_category)
@@ -944,73 +921,43 @@ def process_callback_query(json_data):
             reply_markup=continue_markup
         )
 
-    elif callback_data_message == 'pc_go':
-        list_pod=[]
-        search_pod_pc = [
-            [InlineKeyboardButton("Стационарные_ПК", callback_data='#')],
-            [InlineKeyboardButton("Ноутбуки", callback_data='#')],
-            [InlineKeyboardButton("Моноблоки", callback_data='#')],
-            [InlineKeyboardButton("Планшеты", callback_data='#')],
-        ]
-        search_pod_items = [
-            [InlineKeyboardButton("Мониторы", callback_data='#')],
-            [InlineKeyboardButton("Клавиатуры_и_мыши", callback_data='#')],
-            [InlineKeyboardButton("Акссесуары", callback_data='#')],
-            [InlineKeyboardButton("Планшеты", callback_data='#')],
-        ]
-        search_pod_server = [
-            [InlineKeyboardButton("Серверы", callback_data='#')],
-            [InlineKeyboardButton("Жёсткие_диски", callback_data='#')],
-            [InlineKeyboardButton("Процессоры ", callback_data='#')],
-        ]
+    elif callback_data_message.startswith("toggle_"):  ###### поиск
+        category = callback_data_message.replace("toggle_", "")
 
 
-        selected_categories = user_selected_category.get(chat_id)
-        if 'pc' in selected_categories:
-            list_pod.extend(search_pod_pc)
-        if 'pc_server' in selected_categories:
-            list_pod.extend(search_pod_server)
-        if 'pc_comp' in selected_categories:
-            list_pod.extend(search_pod_server)
 
-        list_pod.extend([
-            [InlineKeyboardButton("Все", callback_data='pc_test')],
-            [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
-            [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
-            [InlineKeyboardButton("🔙Назад", callback_data='category')]
-        ])
+        if category:
+            if chat_id not in user_selected_subcategories:
+                user_selected_subcategories[chat_id] = set()
 
-        continue_markup = InlineKeyboardMarkup(list_pod)
+            if category in user_selected_subcategories[chat_id]:
+                user_selected_subcategories[chat_id].remove(category)
+            else:
+                user_selected_subcategories[chat_id].add(category)
+
+
+
+
 
         bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=message_id,
-            text='🔽 Выберите подкатегорию, отмечая её галочкой ✅. Или же, можете пропустить этот шаг и просто нажать «➡️Продолжить» .'
-        )
+                chat_id=chat_id,
+                message_id=message_id,
+                text='🔽 Выберите подкатегорию, отмечая её галочкой ✅. Или же, можете пропустить этот шаг и просто нажать «➡️Продолжить» .'
+            )
         bot.edit_message_reply_markup(
             chat_id=chat_id,
             message_id=message_id,
-            reply_markup=continue_markup
+            reply_markup=generate_category_keyboard_subcat(chat_id)
         )
     elif callback_data_message == 'pc_test':
-        if chat_id in user_selected_category_go:
-            user_selected_category_go.pop(chat_id)
-            continue_button = [[InlineKeyboardButton("test", callback_data='pc_test')],
-                               [InlineKeyboardButton("Все", callback_data='pc_test')],
-                               [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
-                               [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
-                               [InlineKeyboardButton("🔙Назад", callback_data='category')]]
-            continue_markup = InlineKeyboardMarkup(continue_button)
+        if chat_id not in user_selected_subcategories:
+            user_selected_subcategories[chat_id] = set()
 
+
+        if user_selected_subcategories[chat_id] == ALL_SUBCATEGORIES:
+            user_selected_subcategories[chat_id].clear()
         else:
-            user_selected_category_go[chat_id] = callback_data_message
-            continue_button = [[InlineKeyboardButton("✅ test", callback_data='pc_test')],
-                               [InlineKeyboardButton("Все", callback_data='pc_test')],
-                               [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
-                               [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
-                               [InlineKeyboardButton("🔙Назад", callback_data='category')]]
-            continue_markup = InlineKeyboardMarkup(continue_button)
-
+            user_selected_subcategories[chat_id] = ALL_SUBCATEGORIES.copy()
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
@@ -1019,7 +966,7 @@ def process_callback_query(json_data):
         bot.edit_message_reply_markup(
             chat_id=chat_id,
             message_id=message_id,
-            reply_markup=continue_markup
+            reply_markup=generate_category_keyboard_subcat(chat_id)
         )
 
 
@@ -1050,16 +997,49 @@ def process_callback_query(json_data):
             elif user_selected_mode[chat_id] == 'buy':
                 mode = "Покупка"
             search = user_selected_category.get(chat_id)
-            if search:
-                if mode:
-                    posts = Posts.objects.filter(category__in=search, type=mode)
+            try:
+                search_subcat=list(user_selected_subcategories.get(chat_id))
+                if search_subcat:
+                    if mode:
+                        posts = Posts.objects.filter(category_pod__in=search_subcat, type=mode)
+                    else:
+                        posts = Posts.objects.filter(category_pod__in=search_subcat)
+
+
+            except:
+                if search:
+                    if mode:
+                        posts = Posts.objects.filter(category__in=search, type=mode)
+                    else:
+                        posts = Posts.objects.filter(category__in=search)
                 else:
-                    posts = Posts.objects.filter(category__in=search)
-            else:
-                if mode:
-                    posts = Posts.objects.filter(type=mode)
-                else:
-                    posts = Posts.objects.all()
+                    if mode:
+                        posts = Posts.objects.filter(type=mode)
+                    else:
+                        posts = Posts.objects.all()
+
+
+
+
+
+            # if search_subcat:
+            #     print('asdasfasf')
+            #     if mode:
+            #         posts = Posts.objects.filter(category_pod__in=search_subcat, type=mode)
+            #     else:
+            #         posts = Posts.objects.filter(category_pod__in=search_subcat)
+            # else:
+            #     print('sad')
+            #     if search:
+            #         if mode:
+            #             posts = Posts.objects.filter(category__in=search, type=mode)
+            #         else:
+            #             posts = Posts.objects.filter(category__in=search)
+            #     else:
+            #         if mode:
+            #             posts = Posts.objects.filter(type=mode)
+            #         else:
+            #             posts = Posts.objects.all()
 
             message_count = 0
             if count == len(posts):
@@ -1076,6 +1056,7 @@ def process_callback_query(json_data):
                     reply_markup=pc_search_markup
                 )
                 user_selected_category.pop(chat_id)
+                user_selected_subcategories.pop(chat_id)
                 return
 
             if posts:
@@ -1134,6 +1115,7 @@ def process_callback_query(json_data):
                     reply_markup=pc_search_markup
                 )
             user_selected_category.pop(chat_id)
+            user_selected_subcategories.pop(chat_id)
         except Exception as e:
             pass
             # pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
@@ -1158,6 +1140,7 @@ def process_callback_query(json_data):
                          text='❌К сожалению, по выбранным категориям больше нет доступных постов. Пожалуйста, попробуйте выбрать другие категории или подкатегории.')
 
     elif callback_data_message == "awaiting_description":
+
         bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
@@ -1238,32 +1221,16 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=sell_skip_markup
         )
-    elif callback_data_message.startswith("cat"):
 
-        try:
-            user_states.pop(chat_id)
-            skip_catergory = callback_data_message.split('#')[1]
-        except:
-            pass
-
-        bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=message_id,
-            text="🔍Выберите подкатегорию вашего товара"
-        )
-
-        bot.edit_message_reply_markup(
-            chat_id=chat_id,
-            message_id=message_id,
-            reply_markup=sell_skip_pod_markup
-        )
     elif callback_data_message.startswith("pk"):
 
         try:
-            user_states.pop(chat_id)
             skip_catergory = callback_data_message.split('#')[1]
+            user_states.pop(chat_id)
+
         except:
             pass
+
 
         bot.edit_message_text(
             chat_id=chat_id,
@@ -1279,8 +1246,9 @@ def process_callback_query(json_data):
     elif callback_data_message.startswith("items"):
 
         try:
-            user_states.pop(chat_id)
             skip_catergory = callback_data_message.split('#')[1]
+            user_states.pop(chat_id)
+
         except:
             pass
 
@@ -1298,8 +1266,10 @@ def process_callback_query(json_data):
     elif callback_data_message.startswith("server"):
 
         try:
-            user_states.pop(chat_id)
             skip_catergory = callback_data_message.split('#')[1]
+            user_states.pop(chat_id)
+
+
         except:
             pass
 
@@ -1707,20 +1677,6 @@ def process_callback_query(json_data):
                 type = line.split(": #")[1]
             if line.startswith("Категория:"):
                 category = line.split(": #")[1]
-                if category.startswith('ПК'):
-                    category = 'pc'
-                elif category.startswith('Товары'):
-                    category = 'pc_comp'
-                elif category.startswith('Комплектующие'):
-                    category = 'pc_comp1'
-                elif category.startswith('Серверное'):
-                    category = 'pc_server'
-                elif category.startswith('Сетевое'):
-                    category = 'pc_network'
-                elif category.startswith('Офисная'):
-                    category = 'pc_office'
-                elif category.startswith('Программное'):
-                    category = 'pf_software'
             elif line.startswith("Подкатегория:"):
                 pod = line.split(": #")[1]
 
@@ -1943,4 +1899,3 @@ def process_callback_query(json_data):
 
 def index(request):
     return HttpResponse("Hello, World!")
-
