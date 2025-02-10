@@ -6,6 +6,7 @@ class Posts(models.Model):
     type=models.CharField(max_length=60)
     category=models.CharField(max_length=60)
     category_pod = models.CharField(max_length=60)
+    category_pod_pod = models.CharField(max_length=60,null=True, blank=True, default=None)
     random_key = models.CharField(max_length=100,unique=True, null=True, blank=True, default=None)
     photo=models.JSONField(default=list,null=True, blank=True)
     user_message_id=models.JSONField(default=list,null=True, blank=True)
