@@ -623,24 +623,18 @@ user_selected_category = {}
 user_selected_category_go = {}
 user_selected_mode = {}
 user_selected_subcategories = {}
-<<<<<<< HEAD
 user_selected_subsubcategories={}
-=======
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
 ALL_SUBCATEGORIES = {
     "Стационарные_ПК", "Ноутбуки", "Моноблоки", "Планшеты",
     "Мониторы", "Клавиатуры_и_мыши", "Аксессуары", "Планшеты",
     "Серверы", "Жёсткие_диски", "Процессоры"
 }
-<<<<<<< HEAD
 ALL_SUBSUBCATEGORIES = {
     "msi_pk", "hp_pk", "lenovo_pk", "msi_nout",
     "hp_nout", "lenovo_nout", "msi_monoblok", "hp_monoblok",
     "lenovo_monoblok", "msi_planshet", "hp_planshet",'lenovo_planshet','msi_monitor','hp_monitor','lenovo_monitor','msi_klava','hp_klava','lenovo_klava','msi_acses','hp_acses','lenovo_acses',
     "msi_server",'hp_server','lenovo_server','msi_hdd','hp_hdd','lenovo_hdd','msi_proc','hp_proc','lenovo_proc'
 }
-=======
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
 def generate_category_keyboard(chat_id):
     global user_selected_category
     ########### поиск
@@ -751,18 +745,13 @@ def generate_category_keyboard_subcat(chat_id):
     list_pod.append([InlineKeyboardButton(f"Все", callback_data='pc_test')])
     # Add control buttons
     list_pod.extend([
-<<<<<<< HEAD
         [InlineKeyboardButton("➡️Продолжить", callback_data='subsub_')],
-=======
-        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
         [InlineKeyboardButton("🔙Назад", callback_data='category')]
     ])
 
     return InlineKeyboardMarkup(list_pod)
 
-<<<<<<< HEAD
 def generate_category_keyboard_subsubcat(chat_id):
     selected = user_selected_subsubcategories.get(chat_id, set())
 
@@ -817,8 +806,6 @@ def generate_category_keyboard_subsubcat(chat_id):
 
     return InlineKeyboardMarkup(list_pod)
 
-=======
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
 def process_callback_query(json_data):
     global skip_catergory, skip_pod_category, skip_pod_pod_category, call, user_selected_category, user_selected_mode, user_photo, user_text, saved_photo, user_message_id
 
@@ -1025,7 +1012,6 @@ def process_callback_query(json_data):
             message_id=message_id,
             reply_markup=generate_category_keyboard_subcat(chat_id)
         )
-<<<<<<< HEAD
     elif callback_data_message.startswith("subsub_"):  ###### поиск
         category = callback_data_message.replace("subsub_", "")
 
@@ -1082,16 +1068,6 @@ def process_callback_query(json_data):
         if user_selected_subcategories[chat_id] == ALL_SUBCATEGORIES:
             user_selected_subcategories[chat_id].clear()
         else:
-=======
-    elif callback_data_message == 'pc_test':
-        if chat_id not in user_selected_subcategories:
-            user_selected_subcategories[chat_id] = set()
-
-
-        if user_selected_subcategories[chat_id] == ALL_SUBCATEGORIES:
-            user_selected_subcategories[chat_id].clear()
-        else:
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
             user_selected_subcategories[chat_id] = ALL_SUBCATEGORIES.copy()
         bot.edit_message_text(
             chat_id=chat_id,
@@ -1133,7 +1109,6 @@ def process_callback_query(json_data):
                 mode = "Покупка"
             search = user_selected_category.get(chat_id)
             try:
-<<<<<<< HEAD
                 search_subsubcat=list(user_selected_subsubcategories(chat_id))
                 print(search_subsubcat)
                 if search_subsubcat:
@@ -1158,23 +1133,6 @@ def process_callback_query(json_data):
                     else:
                         posts = Posts.objects.filter(category__in=search)
                 else:
-=======
-                search_subcat=list(user_selected_subcategories.get(chat_id))
-                if search_subcat:
-                    if mode:
-                        posts = Posts.objects.filter(category_pod__in=search_subcat, type=mode)
-                    else:
-                        posts = Posts.objects.filter(category_pod__in=search_subcat)
-
-
-            except:
-                if search:
-                    if mode:
-                        posts = Posts.objects.filter(category__in=search, type=mode)
-                    else:
-                        posts = Posts.objects.filter(category__in=search)
-                else:
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
                     if mode:
                         posts = Posts.objects.filter(type=mode)
                     else:
@@ -1183,28 +1141,6 @@ def process_callback_query(json_data):
 
 
 
-<<<<<<< HEAD
-=======
-
-            # if search_subcat:
-            #     print('asdasfasf')
-            #     if mode:
-            #         posts = Posts.objects.filter(category_pod__in=search_subcat, type=mode)
-            #     else:
-            #         posts = Posts.objects.filter(category_pod__in=search_subcat)
-            # else:
-            #     print('sad')
-            #     if search:
-            #         if mode:
-            #             posts = Posts.objects.filter(category__in=search, type=mode)
-            #         else:
-            #             posts = Posts.objects.filter(category__in=search)
-            #     else:
-            #         if mode:
-            #             posts = Posts.objects.filter(type=mode)
-            #         else:
-            #             posts = Posts.objects.all()
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
 
             message_count = 0
             if count == len(posts):
@@ -1222,10 +1158,7 @@ def process_callback_query(json_data):
                 )
                 user_selected_category.pop(chat_id)
                 user_selected_subcategories.pop(chat_id)
-<<<<<<< HEAD
                 user_selected_subsubcategories.pop(chat_id)
-=======
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
                 return
 
             if posts:
@@ -1285,10 +1218,7 @@ def process_callback_query(json_data):
                 )
             user_selected_category.pop(chat_id)
             user_selected_subcategories.pop(chat_id)
-<<<<<<< HEAD
             user_selected_subsubcategories.pop(chat_id)
-=======
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
         except Exception as e:
             pass
             # pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
@@ -2075,8 +2005,4 @@ def process_callback_query(json_data):
 
 
 def index(request):
-<<<<<<< HEAD
     return HttpResponse("Hello, World!")
-=======
-    return HttpResponse("Hello, World!")
->>>>>>> a222a90159941a2a94253e023564852fdc4aef86
