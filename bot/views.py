@@ -18,7 +18,7 @@ main_id = CHANEL_MAIN
 group_id = CHANEL_SUPPORT
 ads_id = CHANEL_ADS
 admin = ADMIN
-# print(admin)
+
 user_states = {}
 user_photo = {}
 user_text = {}
@@ -26,6 +26,8 @@ user_message_id = {}
 
 request = Request(connect_timeout=40, read_timeout=40)
 bot = telegram.Bot(TOKEN_BOT, request=request)
+
+
 
 def add_b_tags(text, username='username', chat_id='1'):
     if username == None:
@@ -382,7 +384,11 @@ def process_message(json_data):
             pass
 
 
+
     elif message_text == "🔍 Поиск по категориям":
+        user_selected_category.pop(chat_id, None)
+        user_selected_subcategories.pop(chat_id, None)
+        user_selected_subsubcategories.pop(chat_id, None)
         text = "🔍 Выберите категорию для поиска объявлений"
 
         bot.send_message(chat_id, text=text, reply_markup=top_category_markup)
@@ -781,6 +787,36 @@ def generate_category_keyboard_subsubcat(chat_id):
         [get_button("hp_planshet", "hp_planshet")],
         [get_button("lenovo_planshet", "lenovo_planshet")]
     ]
+    search_pod_pod_monitor = [
+        [get_button("msi_monitor", "msi_monitor")],
+        [get_button("hp_monitor", "hp_monitor")],
+        [get_button("lenovo_monitor", "lenovo_monitor")]
+    ]
+    search_pod_pod_klava = [
+        [get_button("msi_klava", "msi_klava")],
+        [get_button("hp_klava", "hp_klava")],
+        [get_button("lenovo_klava", "lenovo_klava")]
+    ]
+    search_pod_pod_acses= [
+        [get_button("msi_acses", "msi_acses")],
+        [get_button("hp_acses", "hp_acses")],
+        [get_button("lenovo_acses", "lenovo_acses")]
+    ]
+    search_pod_pod_server= [
+        [get_button("msi_server", "msi_server")],
+        [get_button("hp_server", "hp_server")],
+        [get_button("lenovo_server", "lenovo_server")]
+    ]
+    search_pod_pod_hdd = [
+        [get_button("msi_hdd", "msi_hdd")],
+        [get_button("hp_hdd", "hp_hdd")],
+        [get_button("lenovo_hdd", "lenovo_hdd")]
+    ]
+    search_pod_pod_proc = [
+        [get_button("msi_proc", "msi_proc")],
+        [get_button("hp_proc", "hp_proc")],
+        [get_button("lenovo_proc", "lenovo_proc")]
+    ]
 
     list_pod = []
 
@@ -794,12 +830,23 @@ def generate_category_keyboard_subsubcat(chat_id):
         list_pod.extend(search_pod_pod_monoblock)
     if 'Планшеты' in selected_categories:
         list_pod.extend(search_pod_pod_planshet)
+    if 'Мониторы' in selected_categories:
+        list_pod.extend(search_pod_pod_monitor)
+    if 'Клавиатуры_и_мыши' in selected_categories:
+        list_pod.extend(search_pod_pod_klava)
+    if 'Аксессуары' in selected_categories:
+        list_pod.extend(search_pod_pod_acses)
+    if 'Серверы' in selected_categories:
+        list_pod.extend(search_pod_pod_server)
+    if 'Жёсткие_диски' in selected_categories:
+        list_pod.extend(search_pod_pod_hdd)
+    if 'Процессоры' in selected_categories:
+        list_pod.extend(search_pod_pod_proc)
 
 
     list_pod.append([InlineKeyboardButton(f"Все", callback_data='all_sub')])
     # Add control buttons
     list_pod.extend([
-        [InlineKeyboardButton("➡️Продолжить", callback_data='pc_search')],
         [InlineKeyboardButton("🔍Искать", callback_data='pc_search')],
         [InlineKeyboardButton("🔙Назад", callback_data='toggle_')]
     ])
@@ -1108,16 +1155,19 @@ def process_callback_query(json_data):
             elif user_selected_mode[chat_id] == 'buy':
                 mode = "Покупка"
             search = user_selected_category.get(chat_id)
+
             try:
-                search_subsubcat=list(user_selected_subsubcategories(chat_id))
-                print(search_subsubcat)
-                if search_subsubcat:
-                    if mode:
-                        posts = Posts.objects.filter(category_pod_pod__in=search_subsubcat, type=mode)
-                    else:
-                        posts = Posts.objects.filter(category_pod_pod__in=search_subsubcat)
-                else:
+                try:
+                    search_subsubcat = list(user_selected_subsubcategories.get(chat_id))
+
+                    if search_subsubcat:
+                        if mode:
+                            posts = Posts.objects.filter(category_pod_pod__in=search_subsubcat, type=mode)
+                        else:
+                            posts = Posts.objects.filter(category_pod_pod__in=search_subsubcat)
+                except:
                     search_subcat = list(user_selected_subcategories.get(chat_id))
+
                     if search_subcat:
                         if mode:
                             posts = Posts.objects.filter(category_pod__in=search_subcat, type=mode)
@@ -1126,16 +1176,26 @@ def process_callback_query(json_data):
 
 
 
-            except:
+
+
+
+
+
+            except Exception as e:
+
                 if search:
                     if mode:
+
                         posts = Posts.objects.filter(category__in=search, type=mode)
                     else:
+
                         posts = Posts.objects.filter(category__in=search)
                 else:
                     if mode:
+
                         posts = Posts.objects.filter(type=mode)
                     else:
+
                         posts = Posts.objects.all()
 
 
@@ -1216,9 +1276,8 @@ def process_callback_query(json_data):
                     message_id=message_id,
                     reply_markup=pc_search_markup
                 )
-            user_selected_category.pop(chat_id)
-            user_selected_subcategories.pop(chat_id)
-            user_selected_subsubcategories.pop(chat_id)
+
+
         except Exception as e:
             pass
             # pc_search = [[InlineKeyboardButton("🔙Назад", callback_data='category')]]
@@ -1630,16 +1689,20 @@ def process_callback_query(json_data):
             bot.send_photo(group_id, photo=query['message']['photo'][0]['file_id'],
                            caption=add_b_tags(query['message'].get('caption', ''), username, user_id),
                            reply_markup=approve_admin_markup, parse_mode='HTML')
-            bot.edit_message_caption(
-                chat_id=chat_id,
-                message_id=message_id,
-                caption="✅ Объявление отправлено на модерацию."
-            )
-            bot.edit_message_reply_markup(
-                chat_id=chat_id,
-                message_id=message_id,
-                reply_markup=nazad_markup
-            )
+
+            bot.delete_message(chat_id, message_id=message_id)
+            bot.send_message(chat_id,text="✅ Объявление отправлено на модерацию.",reply_markup=nazad_markup)
+
+            # bot.edit_message_caption(
+            #     chat_id=chat_id,
+            #     message_id=message_id,
+            #     caption="✅ Объявление отправлено на модерацию."
+            # )
+            # bot.edit_message_reply_markup(
+            #     chat_id=chat_id,
+            #     message_id=message_id,
+            #     reply_markup=nazad_markup
+            # )
 
         else:
 
