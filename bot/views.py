@@ -320,7 +320,7 @@ def process_message(json_data):
         reply_chat_id = json_data['message']['reply_to_message']['chat'].get('id', None)
         reply_message = json_data['message']['reply_to_message']['text']
 
-        if reply_chat_id == ads_id:
+        if int(reply_chat_id )== int(ads_id):
             user_id = re.search(r'id:(\d+)', reply_message).group(1)
             end = [[InlineKeyboardButton("❌Закончить диалог", callback_data='nazad')]]
             end_markup = InlineKeyboardMarkup(end)
