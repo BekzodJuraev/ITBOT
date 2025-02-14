@@ -308,7 +308,7 @@ def fetch_active(chat_id):
 
 
 def process_message(json_data):
-    global saved_photo, price, description, city, phone, call, user_photo, user_text, user_message_id
+    global saved_photo, price, description, city, phone, call, user_photo, user_text, user_message_id,skip_pod_pod_category
     chat_id = json_data['message']['chat']['id']
     message_text = json_data['message'].get('text', "")
     message = json_data['message']
@@ -320,7 +320,7 @@ def process_message(json_data):
         reply_chat_id = json_data['message']['reply_to_message']['chat'].get('id', None)
         reply_message = json_data['message']['reply_to_message']['text']
 
-        if int(reply_chat_id )== int(ads_id):
+        if int(reply_chat_id) == int(ads_id):
             user_id = re.search(r'id:(\d+)', reply_message).group(1)
             end = [[InlineKeyboardButton("❌Закончить диалог", callback_data='nazad')]]
             end_markup = InlineKeyboardMarkup(end)
@@ -340,12 +340,14 @@ def process_message(json_data):
         bot.send_message(chat_id, text, reply_markup=markup_reply, parse_mode="Markdown")  ##repl=markup_reply
     elif message_text == "💰 Продажа":
         saved_photo[chat_id]=[]
+        skip_pod_pod_category= ""
         call = 'sell'
 
         bot.send_message(chat_id, text="📸 Пожалуйста, отправьте фото. Не более 10 штук.", reply_markup=nazad_markup)
         user_states[chat_id] = 'awaiting_photo'
     elif message_text == "🛒 Покупка":
         saved_photo[chat_id]=[]
+        skip_pod_pod_category = ""
         call = 'buy'
 
         bot.send_message(chat_id, text="📸 Пожалуйста, отправьте фото. Не более 10 штук.", reply_markup=sell_markup)
@@ -1167,6 +1169,7 @@ def process_callback_query(json_data):
                             posts = Posts.objects.filter(category_pod_pod__in=search_subsubcat)
                 except:
                     search_subcat = list(user_selected_subcategories.get(chat_id))
+
 
                     if search_subcat:
                         if mode:
