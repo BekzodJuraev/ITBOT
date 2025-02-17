@@ -28,7 +28,6 @@ request = Request(connect_timeout=40, read_timeout=40)
 bot = telegram.Bot(TOKEN_BOT, request=request)
 
 
-
 def add_b_tags(text, username='username', chat_id='1'):
     if username == None:
         username = 'username'
@@ -1670,80 +1669,86 @@ def process_callback_query(json_data):
 
 
     elif callback_data_message.startswith("approve"):
-        user_id = callback_data_message.split('#')[1]
-        username = bot.get_chat(user_id).username
-
-        random_key = None
         try:
-            random_key = callback_data_message.split('#')[2]
+            user_id = callback_data_message.split('#')[1]
+            username = bot.get_chat(user_id).username
+
+            random_key = None
+            try:
+                random_key = callback_data_message.split('#')[2]
+            except:
+                pass
+
+            if random_key:
+                approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}#{random_key}')],
+                                 [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}#{random_key}')]]
+                approve_admin_markup = InlineKeyboardMarkup(approve_admin)
+            else:
+                approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}')],
+                                 [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}')]]
+                approve_admin_markup = InlineKeyboardMarkup(approve_admin)
+
+            if 'photo' in query['message']:
+                bot.send_photo(group_id, photo=query['message']['photo'][0]['file_id'],
+                               caption=add_b_tags(query['message'].get('caption', ''), username, user_id),
+                               reply_markup=approve_admin_markup, parse_mode='HTML')
+
+                bot.delete_message(chat_id, message_id=message_id)
+                bot.send_message(chat_id, text="✅ Объявление отправлено на модерацию.", reply_markup=nazad_markup)
+
+                # bot.edit_message_caption(
+                #     chat_id=chat_id,
+                #     message_id=message_id,
+                #     caption="✅ Объявление отправлено на модерацию."
+                # )
+                # bot.edit_message_reply_markup(
+                #     chat_id=chat_id,
+                #     message_id=message_id,
+                #     reply_markup=nazad_markup
+                # )
+
+            else:
+
+                if random_key:
+                    for item in user_message_id[random_key]:
+                        bot.delete_message(chat_id, message_id=item)
+
+                    media_group = [
+                        InputMediaPhoto(media=file_id,
+                                        caption=add_b_tags(user_text[random_key], username,
+                                                           user_id) if i == 0 else None,
+                                        parse_mode='HTML')
+                        for i, file_id in enumerate(user_photo[random_key])
+                    ]
+                    messages = bot.send_media_group(
+                        chat_id=group_id,
+                        media=media_group,
+                    )
+                    bot.send_message(group_id, text='👆🏻Пост выше👆🏻', reply_markup=approve_admin_markup)
+                    user_message_id[random_key] = [message.message_id for message in messages]
+
+
+
+
+                else:
+                    bot.send_message(group_id, text=add_b_tags(query['message']['text'], username, user_id),
+                                     reply_markup=approve_admin_markup,
+                                     parse_mode='HTML')
+
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text="✅ Объявление отправлено на модерацию."
+                )
+                bot.edit_message_reply_markup(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    reply_markup=nazad_markup
+                )
         except:
             pass
 
-        if random_key:
-            approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}#{random_key}')],
-                             [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}#{random_key}')]]
-            approve_admin_markup = InlineKeyboardMarkup(approve_admin)
-        else:
-            approve_admin = [[InlineKeyboardButton("✅Одобрить", callback_data=f'publish#{user_id}')],
-                             [InlineKeyboardButton("❌Отклонить", callback_data=f'reject#{user_id}')]]
-            approve_admin_markup = InlineKeyboardMarkup(approve_admin)
 
-        if 'photo' in query['message']:
-            bot.send_photo(group_id, photo=query['message']['photo'][0]['file_id'],
-                           caption=add_b_tags(query['message'].get('caption', ''), username, user_id),
-                           reply_markup=approve_admin_markup, parse_mode='HTML')
-
-            bot.delete_message(chat_id, message_id=message_id)
-            bot.send_message(chat_id,text="✅ Объявление отправлено на модерацию.",reply_markup=nazad_markup)
-
-            # bot.edit_message_caption(
-            #     chat_id=chat_id,
-            #     message_id=message_id,
-            #     caption="✅ Объявление отправлено на модерацию."
-            # )
-            # bot.edit_message_reply_markup(
-            #     chat_id=chat_id,
-            #     message_id=message_id,
-            #     reply_markup=nazad_markup
-            # )
-
-        else:
-
-            if random_key:
-                for item in user_message_id[random_key]:
-                    bot.delete_message(chat_id, message_id=item)
-
-                media_group = [
-                    InputMediaPhoto(media=file_id,
-                                    caption=add_b_tags(user_text[random_key], username, user_id) if i == 0 else None,
-                                    parse_mode='HTML')
-                    for i, file_id in enumerate(user_photo[random_key])
-                ]
-                messages = bot.send_media_group(
-                    chat_id=group_id,
-                    media=media_group,
-                )
-                bot.send_message(group_id, text='👆🏻Пост выше👆🏻', reply_markup=approve_admin_markup)
-                user_message_id[random_key] = [message.message_id for message in messages]
-
-
-
-
-            else:
-                bot.send_message(group_id, text=add_b_tags(query['message']['text'], username, user_id),
-                                 reply_markup=approve_admin_markup,
-                                 parse_mode='HTML')
-
-            bot.edit_message_text(
-                chat_id=chat_id,
-                message_id=message_id,
-                text="✅ Объявление отправлено на модерацию."
-            )
-            bot.edit_message_reply_markup(
-                chat_id=chat_id,
-                message_id=message_id,
-                reply_markup=nazad_markup
-            )
 
 
 
@@ -1756,123 +1761,128 @@ def process_callback_query(json_data):
 
 
     elif callback_data_message.startswith("publish"):
-        user_id = callback_data_message.split('#')[1]
-        username = bot.get_chat(user_id).username
-        list_id = []
-        random_key = None
         try:
-            random_key = callback_data_message.split('#')[2]
+
+            user_id = callback_data_message.split('#')[1]
+            username = bot.get_chat(user_id).username
+            list_id = []
+            random_key = None
+            try:
+                random_key = callback_data_message.split('#')[2]
+            except:
+                pass
+
+            if call == 'buy':
+                if 'photo' in query['message']:
+                    sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
+                                                  caption=add_b_tags(query['message'].get('caption', ''), username,
+                                                                     user_id), parse_mode='HTML')
+                    text = query['message'].get('caption', '')
+                else:
+                    if random_key:
+                        for item in user_message_id[random_key]:
+                            bot.delete_message(group_id, message_id=item)
+                        media_group = [
+                            InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key], username,
+                                                                              user_id) if i == 0 else None,
+                                            parse_mode='HTML')
+                            for i, file_id in enumerate(user_photo[random_key])
+                        ]
+
+                        sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
+                        list_id = [message.message_id for message in sent_message]
+
+                        sent_message = sent_message[0]  # The first message in the media group
+                        text = user_text[random_key]
+
+                        # user_photo.pop(random_key)
+                        # user_text.pop(random_key)
+                    else:
+                        sent_message = bot.send_message(main_id,
+                                                        text=add_b_tags(query['message']['text'], username, user_id),
+                                                        parse_mode='HTML')
+                        text = query['message']['text']
+
+            else:
+                if 'photo' in query['message']:
+                    sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
+                                                  caption=add_b_tags(query['message'].get('caption', ''), username,
+                                                                     user_id), reply_markup=bron_markup, parse_mode='HTML')
+                    text = query['message'].get('caption', '')
+                else:
+                    if random_key:
+                        for item in user_message_id[random_key]:
+                            bot.delete_message(group_id, message_id=item)
+                        media_group = [
+                            InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key], username,
+                                                                              user_id) if i == 0 else None,
+                                            parse_mode='HTML')
+                            for i, file_id in enumerate(user_photo[random_key])
+                        ]
+
+                        sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
+                        list_id = [message.message_id for message in sent_message]
+
+                        sent_message = sent_message[0]
+                        bron_pub = [
+                            [InlineKeyboardButton("📝Забронировать", callback_data=f'bron#{sent_message.message_id}')]]
+                        bron_pub_markup = InlineKeyboardMarkup(bron_pub)
+                        bot.send_message(main_id, text='👆🏻Пост выше👆🏻', reply_markup=bron_pub_markup)
+                        text = user_text[random_key]
+
+                        # user_photo.pop(random_key)
+                        # user_text.pop(random_key)
+
+                        # first_message_id = first_sent_message.message_id
+
+
+
+                    else:
+                        sent_message = bot.send_message(main_id,
+                                                        text=add_b_tags(query['message']['text'], username, user_id),
+                                                        reply_markup=bron_markup, parse_mode='HTML')
+                        text = query['message']['text']
+
+            lines = text.split("\n")
+            category = None
+            pod = None
+            type = None
+            podpod=None
+
+            for line in lines:
+                if line.startswith("Тип:"):
+                    type = line.split(": #")[1]
+                if line.startswith("Категория:"):
+                    category = line.split(": #")[1]
+                elif line.startswith("Подкатегория:"):
+                    pod = line.split(": #")[1]
+                elif line.startswith("Подподкатегория:"):
+                    podpod = line.split(": #")[1]
+
+            Posts.objects.create(
+                user_id=user_id,
+                message_id=sent_message.message_id,
+                category=category,
+                category_pod=pod,
+                category_pod_pod=podpod,
+                type=type,
+                random_key=random_key or None,
+                user_message_id=list_id,
+                caption=user_text.get(random_key, None),
+                photo=user_photo.get(random_key, None)
+            )
+
+            bot.send_message(user_id,
+                             text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}',
+                             disable_web_page_preview=True)
+            bot.delete_message(chat_id=group_id, message_id=message_id)
+            if random_key:
+                user_photo.pop(random_key)
+                user_text.pop(random_key)
+                user_message_id.pop(random_key)
         except:
             pass
 
-        if call == 'buy':
-            if 'photo' in query['message']:
-                sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
-                                              caption=add_b_tags(query['message'].get('caption', ''), username,
-                                                                 user_id), parse_mode='HTML')
-                text = query['message'].get('caption', '')
-            else:
-                if random_key:
-                    for item in user_message_id[random_key]:
-                        bot.delete_message(group_id, message_id=item)
-                    media_group = [
-                        InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key], username,
-                                                                          user_id) if i == 0 else None,
-                                        parse_mode='HTML')
-                        for i, file_id in enumerate(user_photo[random_key])
-                    ]
-
-                    sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
-                    list_id = [message.message_id for message in sent_message]
-
-                    sent_message = sent_message[0]  # The first message in the media group
-                    text = user_text[random_key]
-
-                    # user_photo.pop(random_key)
-                    # user_text.pop(random_key)
-                else:
-                    sent_message = bot.send_message(main_id,
-                                                    text=add_b_tags(query['message']['text'], username, user_id),
-                                                    parse_mode='HTML')
-                    text = query['message']['text']
-
-        else:
-            if 'photo' in query['message']:
-                sent_message = bot.send_photo(main_id, photo=query['message']['photo'][0]['file_id'],
-                                              caption=add_b_tags(query['message'].get('caption', ''), username,
-                                                                 user_id), reply_markup=bron_markup, parse_mode='HTML')
-                text = query['message'].get('caption', '')
-            else:
-                if random_key:
-                    for item in user_message_id[random_key]:
-                        bot.delete_message(group_id, message_id=item)
-                    media_group = [
-                        InputMediaPhoto(media=file_id, caption=add_b_tags(user_text[random_key], username,
-                                                                          user_id) if i == 0 else None,
-                                        parse_mode='HTML')
-                        for i, file_id in enumerate(user_photo[random_key])
-                    ]
-
-                    sent_message = bot.send_media_group(chat_id=main_id, media=media_group)
-                    list_id = [message.message_id for message in sent_message]
-
-                    sent_message = sent_message[0]
-                    bron_pub = [
-                        [InlineKeyboardButton("📝Забронировать", callback_data=f'bron#{sent_message.message_id}')]]
-                    bron_pub_markup = InlineKeyboardMarkup(bron_pub)
-                    bot.send_message(main_id, text='👆🏻Пост выше👆🏻', reply_markup=bron_pub_markup)
-                    text = user_text[random_key]
-
-                    # user_photo.pop(random_key)
-                    # user_text.pop(random_key)
-
-                    # first_message_id = first_sent_message.message_id
-
-
-
-                else:
-                    sent_message = bot.send_message(main_id,
-                                                    text=add_b_tags(query['message']['text'], username, user_id),
-                                                    reply_markup=bron_markup, parse_mode='HTML')
-                    text = query['message']['text']
-
-        lines = text.split("\n")
-        category = None
-        pod = None
-        type = None
-        podpod=None
-
-        for line in lines:
-            if line.startswith("Тип:"):
-                type = line.split(": #")[1]
-            if line.startswith("Категория:"):
-                category = line.split(": #")[1]
-            elif line.startswith("Подкатегория:"):
-                pod = line.split(": #")[1]
-            elif line.startswith("Подподкатегория:"):
-                podpod = line.split(": #")[1]
-
-        Posts.objects.create(
-            user_id=user_id,
-            message_id=sent_message.message_id,
-            category=category,
-            category_pod=pod,
-            category_pod_pod=podpod,
-            type=type,
-            random_key=random_key or None,
-            user_message_id=list_id,
-            caption=user_text.get(random_key, None),
-            photo=user_photo.get(random_key, None)
-        )
-
-        bot.send_message(user_id,
-                         text=f'🎉Ваш пост был успешно одобрен администратором и опубликован на канале! Ссылка на пост:https://t.me/mainbarxolka/{sent_message.message_id}',
-                         disable_web_page_preview=True)
-        bot.delete_message(chat_id=group_id, message_id=message_id)
-        if random_key:
-            user_photo.pop(random_key)
-            user_text.pop(random_key)
-            user_message_id.pop(random_key)
 
 
 
@@ -1928,27 +1938,31 @@ def process_callback_query(json_data):
 
 
     elif callback_data_message.startswith('reject'):
-        user_id = callback_data_message.split('#')[1]
-        random_key = None
         try:
-            random_key = callback_data_message.split('#')[2]
+
+            user_id = callback_data_message.split('#')[1]
+            random_key = None
+            try:
+                random_key = callback_data_message.split('#')[2]
+            except:
+                pass
+            if random_key:
+                bot.send_message(chat_id=user_id, text='❌Ваш пост был отклонен администрацией.')
+
+                for item in user_message_id[random_key]:
+                    bot.delete_message(group_id, message_id=item)
+                bot.delete_message(chat_id=group_id, message_id=message_id)
+                user_photo.pop(random_key)
+                user_text.pop(random_key)
+
+
+
+            else:
+                bot.send_message(chat_id=user_id, text='❌Ваш пост был отклонен администрацией.')
+                bot.copy_message(chat_id=user_id, from_chat_id=group_id, message_id=message_id)
+                bot.delete_message(chat_id=group_id, message_id=message_id)
         except:
             pass
-        if random_key:
-            bot.send_message(chat_id=user_id, text='❌Ваш пост был отклонен администрацией.')
-
-            for item in user_message_id[random_key]:
-                bot.delete_message(group_id, message_id=item)
-            bot.delete_message(chat_id=group_id, message_id=message_id)
-            user_photo.pop(random_key)
-            user_text.pop(random_key)
-
-
-
-        else:
-            bot.send_message(chat_id=user_id, text='❌Ваш пост был отклонен администрацией.')
-            bot.copy_message(chat_id=user_id, from_chat_id=group_id, message_id=message_id)
-            bot.delete_message(chat_id=group_id, message_id=message_id)
 
 
 
