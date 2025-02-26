@@ -12,26 +12,22 @@ dp = Dispatcher(bot)
 
 logging.basicConfig(level=logging.INFO)
 dp.middleware.setup(LoggingMiddleware())
-#daphne -p 8000 Statron.asgi:application
 
 
-
-async def set_webhook(dispatcher):
+async def on_startup(dispatcher):
     try:
-        webhook_url = f"{ngrok_url}"
-        await bot.set_webhook(webhook_url)
-        logging.info(f"Webhook set to {webhook_url}")
+        await bot.delete_webhook(drop_pending_updates=True)  # Clears old updates
+        await bot.set_webhook(WEBHOOK_URL)
+        logging.info(f"Webhook set to {WEBHOOK_URL}")
     except Exception as e:
         logging.error(f"Failed to set webhook: {e}")
-
-# Add other handlers here
 
 if __name__ == '__main__':
     executor.start_webhook(
         dispatcher=dp,
         webhook_path='/telegram_webhook/',
-        on_startup=set_webhook,
-        skip_updates=True,
+        on_startup=on_startup,  # Calls async on_startup properly
         host='0.0.0.0',
         port=7000,
+        skip_updates=True
     )
