@@ -1900,11 +1900,22 @@ def process_callback_query(json_data):
 
     elif callback_data_message.startswith('bron'):
         id_message = message_id
+        x=""
         try:
             id_message = callback_data_message.split('#')[1]
 
+
         except:
             pass
+
+        try:
+            x = callback_data_message.split('#')[2]
+
+        except:
+            pass
+
+
+
 
         bron_rejecet = [[InlineKeyboardButton("❌Забронировано", callback_data='empty')]]
         bron_rejecet_markup = InlineKeyboardMarkup(bron_rejecet)
@@ -1915,10 +1926,15 @@ def process_callback_query(json_data):
         )
         name = query.get('from', {}).get('first_name', 'Unknown')
         user = query['from']['id']
-        profile = Posts.objects.filter(message_id=id_message).first()
+        if x:
+            profile = Posts.objects.filter(message_id=x).first()
+        else:
+            profile = Posts.objects.filter(message_id=id_message).first()
+
+
         if profile:
             mention_text = f"[{name}](tg://user?id={user})"
-            notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'notify_rejecet#{message_id}#{user}')]]
+            notify_rejecet = [[InlineKeyboardButton("❌Не хочет", callback_data=f'notify_rejecet#{message_id}#{user}#{profile.message_id}')]]
             notify_rejecet_markup = InlineKeyboardMarkup(notify_rejecet)
 
             bot.send_message(chat_id=profile.user_id,
@@ -1935,7 +1951,8 @@ def process_callback_query(json_data):
         try:
             id_message = callback_data_message.split('#')[1]
             id_user = callback_data_message.split('#')[2]
-            bron_pub = [[InlineKeyboardButton("📝Забронировать", callback_data=f'bron#{id_message}')]]
+            message=callback_data_message.split('#')[3]
+            bron_pub = [[InlineKeyboardButton("📝Забронировать", callback_data=f'bron#{id_message}#{message}')]]
             bron_pub_markup = InlineKeyboardMarkup(bron_pub)
 
             bot.edit_message_reply_markup(
@@ -1943,6 +1960,7 @@ def process_callback_query(json_data):
                 message_id=id_message,
                 reply_markup=bron_pub_markup
             )
+
             bot.delete_message(chat_id=id_user, message_id=message_id)
             bot.send_message(chat_id=id_user, text=f"🔓 Кнопка 📝Забронировать снова активирована для вашего объявления.")
         except Exception as e:
